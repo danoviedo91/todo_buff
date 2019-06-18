@@ -5,6 +5,8 @@
     <meta charset="utf-8">
     <title>Todo List</title>
     <%= stylesheetTag("application.css") %>
+    <meta name="csrf-param" content="authenticity_token" />
+    <meta name="csrf-token" content="<%= authenticity_token %>" />
     <link rel="icon" href="<%= assetPath("images/favicon.ico") %>">
   </head>
   <body>
@@ -27,19 +29,19 @@
         <div>
           <ul class="d-flex align-items-center list-unstyled m-0">
   
-            <%= if (!filterStatus.Completed && !filterStatus.Incompleted) { %>
+            <%= if (!filterStatus.Completed && !filterStatus.Incompleted && mainViewFlag) { %>
             <li><a href="/" class="text-white wwc-nav-link wwc-nav-first-link wwc-active-link">All Tasks</a></li>
             <% } else { %>
             <li><a href="/" class="text-white wwc-nav-link wwc-nav-first-link">All Tasks</a></li>
             <% } %>
   
-            <%= if (filterStatus.Incompleted) { %>
+            <%= if (filterStatus.Incompleted && mainViewFlag) { %>
             <li><a href="/?status=incompleted" class="text-white wwc-nav-link wwc-nav-first-link wwc-active-link">Incompleted Tasks</a></li>
             <% } else { %>
             <li><a href="/?status=incompleted" class="text-white wwc-nav-link wwc-nav-first-link">Incompleted Tasks</a></li>
             <% } %>
   
-            <%= if (filterStatus.Completed) { %>
+            <%= if (filterStatus.Completed && mainViewFlag) { %>
             <li><a href="/?status=completed" class="text-white wwc-nav-link wwc-active-link">Completed Tasks</a></li>
             <% } else { %>
             <li><a href="/?status=completed" class="text-white wwc-nav-link">Completed Tasks</a></li>

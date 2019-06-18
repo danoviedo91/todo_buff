@@ -30,6 +30,7 @@
             <% } else { %>
             <a class="btn wwc-cancel-btn" href="/">Cancel</a>
             <% } %>
+            <input name="authenticity_token" type="hidden" value="<%= authenticity_token %>">
             <button type="submit" class="btn text-white wwc-create-task-btn">Create Task</button>
         </div>
         <% } %>        

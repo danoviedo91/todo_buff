@@ -84,11 +84,11 @@
               <% } %>
   
               <%= if (filterStatus.Completed) { %>
-              <a class="js-wwc-trash-btn" href="#" data-toggle="modal" data-target="#wwc-modal-delete" data-delete="/delete?status=completed&id=<%= task.ID %>"><i class="far fa-trash-alt"></i></a>
+                <a class="js-wwc-trash-btn" href="/delete?status=completed&id=<%= task.ID %>" data-method="DELETE" data-confirm="Are you sure?"><i class="far fa-trash-alt"></i></a>
               <% } else if (filterStatus.Incompleted) { %>
-              <a class="js-wwc-trash-btn" href="#" data-toggle="modal" data-target="#wwc-modal-delete" data-delete="/delete?status=incompleted&id=<%= task.ID %>"><i class="far fa-trash-alt"></i></a>
+              <a class="js-wwc-trash-btn" href="/delete?status=incompleted&id=<%= task.ID %>" data-method="DELETE" data-confirm="Are you sure?"><i class="far fa-trash-alt"></i></a>
               <% } else { %>
-              <a class="js-wwc-trash-btn" href="#" data-toggle="modal" data-target="#wwc-modal-delete" data-delete="/delete?id=<%= task.ID %>"><i class="far fa-trash-alt"></i></a>
+              <a class="js-wwc-trash-btn" href="delete?id=<%= task.ID %>" data-method="DELETE" data-confirm="Are you sure?"><i class="far fa-trash-alt"></i></a>
               <% } %>
             </td>
           </tr>
@@ -98,27 +98,3 @@
       <% } %>
     </table>
   </div>
-
-  <div class="wwc-delete-modal-container">
-
-      <div class="modal fade" id="wwc-modal-delete" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="exampleModalLabel">Delete Task</h5>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
-            <div class="modal-body">
-              Are you sure you want to delete this task?
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn wwc-cancel-btn" data-dismiss="modal">Cancel</button>
-              <a class="btn wwc-confirm-delete-btn js-wwc-confirm-delete-btn text-white " data-method="DELETE">Delete</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>

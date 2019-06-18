@@ -81,6 +81,7 @@ func HomeHandler(c buffalo.Context) error {
 	c.Set("currentDateTime", time.Now())
 	c.Set("tasksArray", records)
 	c.Set("filterStatus", filterStatus)
+	c.Set("mainViewFlag", true)
 
 	return c.Render(200, r.HTML("index.html"))
 }
