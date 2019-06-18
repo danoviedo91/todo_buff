@@ -1,64 +1,124 @@
-<header>
-  <div class="container">
-    <div class="row">
-      <div class="col-md-1 col-sm-2 col-xs-2 logo">
-        <a href="<%= rootPath() %>"><img src="<%= rootPath() %>assets/images/logo.svg" alt=""></a>
-      </div>
-      <div class="col-md-9 col-sm-9 col-xs-10 titles">
-        <h1><%= t("welcome_greeting") %></h1>
-        <h2>
-          <a href="https://github.com/gobuffalo/buffalo"><i class="fa fa-github" aria-hidden="true"></i> https://github.com/gobuffalo/buffalo</a>
-        </h2>
-        <h2 class="documentation">
-          <a href="http://gobuffalo.io/"><i class="fa fa-book" aria-hidden="true"></i> Documentation</a>
-        </h2>
-      </div>
-    </div>
+<div class="d-flex justify-content-end">
+  <%= if (filterStatus.Completed) { %>
+  <a class="btn wwc-add-task-btn text-white" href="/new?status=completed">Add Task</a>
+  <% } else if (filterStatus.Incompleted) { %>
+  <a class="btn wwc-add-task-btn text-white" href="/new?status=incompleted">Add Task</a>
+  <% } else { %>
+  <a class="btn wwc-add-task-btn text-white" href="/new">Add Task</a>
+  <% } %>
+</div>
+
+<div class="d-flex justify-content-end">
+    <% if (filterStatus.Completed) { %>
+    <a class="btn wwc-add-task-btn text-white" href="/new?status=completed">Add Task</a>
+    <% } else if (filterStatus.Incompleted) { %>
+    <a class="btn wwc-add-task-btn text-white" href="/new?status=incompleted">Add Task</a>
+    <% } else { %>
+    <a class="btn wwc-add-task-btn text-white" href="/new">Add Task</a>
+    <% } %>
   </div>
+  <div class="wwc-tasks-container">
+    <table class="table table-borderless" id="wwc-task-table">
+      <thead class="thead-dark">
+        <tr>
+          <th class="wwc-task-name wwc-thead-first-element">Task</th>
+          <th class="wwc-task-date-and-actions">Complete by</th>
+          <th class="wwc-task-date-and-actions">Actions</th>
+        </tr>
+      </thead>
 
-</header>
+      <%= if (defaultMsgFlag) { %>
 
-<div class="row">
-  <div class="col-md-12">
-    <div class="subtitle">
-      <div class="container">
-        <h3>Defined Routes</h3>
-      </div>
-    </div>
-    <div class="table-responsive">
-      <table class="table table-striped">
-        <thead>
-          <tr text-align="left">
-            <th class="centered">METHOD</th>
-            <th>PATH</th>
-            <th>NAME</th>
-            <th>HANDLER</th>
-          </tr>
-        </thead>
+        <%= if (filterStatus.Completed) { %>
+
+        <tr><td colspan="3" id="wwc-notasks-msg">No completed tasks to show</td></tr>
+
+        <% } else if (filterStatus.Incompleted) { %>
+
+        <tr><td colspan="3" id="wwc-notasks-msg">No incompleted tasks to show</td></tr>
+
+        <% } else { %>
+
+        <tr><td colspan="3" id="wwc-notasks-msg">No tasks to show</td></tr>
+
+        <% } %>
+
+      <% } else { %>
+
         <tbody>
 
-          <%= for (r) in routes { %>
-            <tr>
-              <td class="centered">
-                <%= r.Method %>
-              </td>
-              <td>
-                <%= if (r.Method != "GET" || r.Path ~= "{") {
-                  return r.Path
-                } else {
-                  return linkTo(r.Path)
-                } %>
-              </td>
-              <td>
-                <%= r.PathName %>
-              </td>
-              <td><code><%= r.HandlerName %></code></td>
-            </tr>
-          <% } %>
+        <%= for (task) in tasksArray { %>
+          <tr>
+            <td class="wwc-task-name">
+  
+              <%= if (filterStatus.Completed) { %>
+                <a class="wwc-complete-check wwc-task-completed" href="/complete?action=incomplete&id=<%= task.ID %>&status=completed" data-method="PATCH"><i class="far fa-check-circle"></i></a>
+              <% } else if (filterStatus.Incompleted) { %>
+                <a class="wwc-complete-check wwc-task-incompleted" href="/complete?action=complete&id=<%= task.ID %>&status=incompleted" data-method="PATCH"><i class="far fa-check-circle"></i></a>
+              <% } else { %>
+                <%= if (task.Completed) { %>
+                <a class="wwc-complete-check wwc-task-completed" href="/complete?action=incomplete&id=<%= task.ID %>" data-method="PATCH"><i class="far fa-check-circle"></i></a>
+                <% } else { %>
+                <a class="wwc-complete-check wwc-task-incompleted" href="/complete?action=complete&id=<%= task.ID %>" data-method="PATCH"><i class="far fa-check-circle"></i></a>
+                <% } %>
+              <% } %>
+              
+              <%= if (filterStatus.Completed) { %>
+              <a href="/show?status=completed&id=<%= task.ID %>" class="wwc-task-title"><%= task.Title %></a>
+              <% } else if (filterStatus.Incompleted) { %>
+              <a href="/show?status=incompleted&id=<%= task.ID %>" class="wwc-task-title"><%= task.Title %></a>
+              <% } else { %>
+              <a href="/show?id=<%= task.ID %>" class="wwc-task-title"><%= task.Title %></a>
+              <% } %>
+  
+            </td>
+            <td class="wwc-task-date-and-actions"><%= task.Deadline.Day() %> <%= task.Deadline.Month() %> <%= task.Deadline.Year() %></td>
+            <td class="wwc-task-date-and-actions">
+  
+              <%= if (filterStatus.Completed) { %>
+              <a href="/edit?status=completed&id=<%= task.ID %>" class="wwc-edit-item"><i class="fas fa-pencil-alt"></i></a>
+              <% } else if (filterStatus.Incompleted) { %>
+              <a href="/edit?status=incompleted&id=<%= task.ID %>" class="wwc-edit-item"><i class="fas fa-pencil-alt"></i></a>
+              <% } else { %>
+              <a href="/edit?id=<%= task.ID %>" class="wwc-edit-item"><i class="fas fa-pencil-alt"></i></a>
+              <% } %>
+  
+              <%= if (filterStatus.Completed) { %>
+              <a class="js-wwc-trash-btn" href="#" data-toggle="modal" data-target="#wwc-modal-delete" data-delete="/delete?status=completed&id=<%= task.ID %>"><i class="far fa-trash-alt"></i></a>
+              <% } else if (filterStatus.Incompleted) { %>
+              <a class="js-wwc-trash-btn" href="#" data-toggle="modal" data-target="#wwc-modal-delete" data-delete="/delete?status=incompleted&id=<%= task.ID %>"><i class="far fa-trash-alt"></i></a>
+              <% } else { %>
+              <a class="js-wwc-trash-btn" href="#" data-toggle="modal" data-target="#wwc-modal-delete" data-delete="/delete?id=<%= task.ID %>"><i class="far fa-trash-alt"></i></a>
+              <% } %>
+            </td>
+          </tr>
 
-        </tbody>
-      </table>
-    </div>
+        <% } %>
+      </tbody>
+      <% } %>
+    </table>
   </div>
-</div>
-<div class="foot"> <span> Powered by <a href="http://gobuffalo.io/">gobuffalo.io</a></span> </div>
+
+  <div class="wwc-delete-modal-container">
+
+      <div class="modal fade" id="wwc-modal-delete" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Delete Task</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              Are you sure you want to delete this task?
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn wwc-cancel-btn" data-dismiss="modal">Cancel</button>
+              <a class="btn wwc-confirm-delete-btn js-wwc-confirm-delete-btn text-white " data-method="DELETE">Delete</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>

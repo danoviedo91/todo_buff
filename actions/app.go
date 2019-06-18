@@ -9,7 +9,6 @@ import (
 
 	"github.com/danoviedo91/todo_buff/models"
 	"github.com/gobuffalo/buffalo-pop/pop/popmw"
-	csrf "github.com/gobuffalo/mw-csrf"
 	i18n "github.com/gobuffalo/mw-i18n"
 	"github.com/gobuffalo/packr/v2"
 )
@@ -48,7 +47,7 @@ func App() *buffalo.App {
 
 		// Protect against CSRF attacks. https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)
 		// Remove to disable this.
-		app.Use(csrf.New)
+		// app.Use(csrf.New)
 
 		// Wraps each request in a transaction.
 		//  c.Value("tx").(*pop.Connection)
@@ -59,6 +58,13 @@ func App() *buffalo.App {
 		app.Use(translations())
 
 		app.GET("/", HomeHandler)
+		app.GET("/new", NewTodo)             //http.HandleFunc("/new", actions.New)
+		app.POST("/create", CreateTodo)      // http.HandleFunc("/create", actions.Create)
+		app.DELETE("/delete", DeleteTodo)    // http.HandleFunc("/delete", actions.Delete)
+		app.GET("/edit", EditTodo)           // http.HandleFunc("/edit", actions.Edit)
+		app.PUT("/update", UpdateTodo)       // http.HandleFunc("/update", actions.Update)
+		app.GET("/show", ShowTodo)           // http.HandleFunc("/show", actions.Show)
+		app.PATCH("/complete", CompleteTodo) // http.HandleFunc("/complete", actions.Complete)
 
 		app.ServeFiles("/", assetsBox) // serve files from the public directory
 	}

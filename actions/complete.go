@@ -8,19 +8,37 @@ import (
 	"github.com/gobuffalo/buffalo"
 )
 
-// HomeHandler is a default handler to serve up
-// a home page.
-func HomeHandler(c buffalo.Context) error {
+// CompleteTodo default implementation.
+func CompleteTodo(c buffalo.Context) error {
 
 	// Establish database connection
 	db := models.DB
+	updateTodo := models.Todo{}
+
+	err := db.Find(&updateTodo, c.Param("id"))
+
+	if err != nil {
+		log.Print(err)
+	}
+
+	if c.Param("action") == "complete" {
+		updateTodo.Completed = true
+	} else if c.Param("action") == "incomplete" {
+		updateTodo.Completed = false
+	}
+
+	// Update record given the id
+	err = db.Update(&updateTodo)
+
+	if err != nil {
+		log.Print(err)
+	}
 
 	// Initialize database-query variables
 
 	allRecords, records := []models.Todo{}, []models.Todo{}
-	pendingTasksNumber := 0
 
-	err := db.All(&allRecords)
+	err = db.All(&allRecords)
 
 	if err != nil {
 		log.Fatal(err)
@@ -34,7 +52,7 @@ func HomeHandler(c buffalo.Context) error {
 		false,
 	}
 
-	// Assign values to variables...
+	pendingTasksNumber := 0
 
 	// If /?completed=true
 
@@ -65,7 +83,6 @@ func HomeHandler(c buffalo.Context) error {
 		pendingTasksNumber = len(records)
 		records = allRecords
 	}
-
 	// Catch if there are tasks to show or not...
 
 	defaultMsgFlag := false
@@ -76,6 +93,8 @@ func HomeHandler(c buffalo.Context) error {
 
 	// Prepare to send data to template
 
+	// Prepare to send data to template
+
 	c.Set("defaultMsgFlag", defaultMsgFlag)
 	c.Set("pendingTasksNumber", pendingTasksNumber)
 	c.Set("currentDateTime", time.Now())
@@ -83,4 +102,5 @@ func HomeHandler(c buffalo.Context) error {
 	c.Set("filterStatus", filterStatus)
 
 	return c.Render(200, r.HTML("index.html"))
+
 }

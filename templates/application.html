@@ -3,18 +3,54 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="utf-8">
-    <title>Buffalo - Todo Buff</title>
+    <title>Todo List</title>
     <%= stylesheetTag("application.css") %>
-    <meta name="csrf-param" content="authenticity_token" />
-    <meta name="csrf-token" content="<%= authenticity_token %>" />
     <link rel="icon" href="<%= assetPath("images/favicon.ico") %>">
   </head>
   <body>
 
-    <div class="container">
-      <%= partial("flash.html") %>
-      <%= yield %>
-    </div>
+    <header>
+      <nav class="wwc-navbar navbar navbar-light bg-light text-white shadow">
+        <div class="d-flex">
+          <a href="/" class="wwc-home-link"><span class="wwc-navbar-brand navbar-brand mb-0 h1 text-white d-flex align-items-center font-size-navbar">ToDo List</span></a>
+          <div class="wwc-uncompleted-and-date">
+            <span class="wwc-number-of-incompleted-tasks"><%= pendingTasksNumber %> Incompleted Tasks</span><br>
+            <span class="wwc-today-date"></span>
+              <%= currentDateTime.Weekday() %>
+              <%= currentDateTime.Day() %>
+              <%= currentDateTime.Month() %>
+              <%= currentDateTime.Year() %>
+            </span>
+          </div>
+        </div>
+  
+        <div>
+          <ul class="d-flex align-items-center list-unstyled m-0">
+  
+            <%= if (!filterStatus.Completed && !filterStatus.Incompleted) { %>
+            <li><a href="/" class="text-white wwc-nav-link wwc-nav-first-link wwc-active-link">All Tasks</a></li>
+            <% } else { %>
+            <li><a href="/" class="text-white wwc-nav-link wwc-nav-first-link">All Tasks</a></li>
+            <% } %>
+  
+            <%= if (filterStatus.Incompleted) { %>
+            <li><a href="/?status=incompleted" class="text-white wwc-nav-link wwc-nav-first-link wwc-active-link">Incompleted Tasks</a></li>
+            <% } else { %>
+            <li><a href="/?status=incompleted" class="text-white wwc-nav-link wwc-nav-first-link">Incompleted Tasks</a></li>
+            <% } %>
+  
+            <%= if (filterStatus.Completed) { %>
+            <li><a href="/?status=completed" class="text-white wwc-nav-link wwc-active-link">Completed Tasks</a></li>
+            <% } else { %>
+            <li><a href="/?status=completed" class="text-white wwc-nav-link">Completed Tasks</a></li>
+            <% } %>
+            
+          </ul>
+        </div>
+      </nav>
+    </header>
+
+    <%= yield %>
 
     <%= javascriptTag("application.js") %>
   </body>

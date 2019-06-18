@@ -1,118 +1,250 @@
-.container {
-	min-width: 320px;
+/* 
+    0.  GENERAL RULES
+*/
+
+body {
+    background-color: #f7f7f6
 }
 
-header {
-	background-color: #62a5ee;
-	padding: 10px 20px;
-	box-sizing: border-box;
+/* 
+    1.  HELPER CLASSES
+*/
+
+.wwc-txt-green {
+    color: green !important;
 }
 
-.logo img {
-	width: 80px;
+.wwc-hidden {
+    display: none !important;
 }
 
-.titles h1 {
-	font-size: 30px;
-	font-weight: 300;
-	color: white;
-	margin-bottom: 13px;
-	margin-top: 5px;
+.shadow {
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
 }
 
-.titles h2 {
-	font-weight: 300;
-	font-size: 18px;
-	display: inline-block;
-	margin: 0;
+/* 
+    2.  STYLING CLASSES
+*/
+
+.wwc-navbar {
+    background-color: #72c0db !important;
+    padding: 25px 32px;
 }
 
-.titles a {
-	color: white;
-	text-decoration: underline;
+.wwc-navbar-brand {
+    margin-right: 58px;
 }
 
-.titles i {
-	margin-right: 5px;
-	text-decoration: none;
+.font-size-navbar {
+    font-size: 28px;
 }
 
-.titles .documentation {
-	margin-left: 28px;
+.wwc-uncompleted-and-date {
+    border-left: 2px solid white;
+    padding-left: 29px;
 }
 
-.subtitle {
-	color: white;
-	margin: 0;
-	padding: 13px 0;
-	background-color: #2a3543;
-	margin-bottom: 20px;
+.wwc-number-of-incompleted-tasks {
+    font-weight: 500;
+    font-size: 17px;
 }
 
-.subtitle h3 {
-	font-size: 22px;
-	font-weight: 400;
-	margin: 0;
+.wwc-today-date {
+    font-size: 14px;
+    font-weight: 100;
 }
 
-table {
-	font-size: 14px;
+.wwc-nav-link {
+    font-weight: 300;
 }
 
-table.table tbody tr td {
-	border-top: 0;
-	padding: 10px;
+.wwc-active-link {
+    font-weight: 500;
 }
 
-.foot {
-	text-align: right;
-	color: #c5c5c5;
-	font-weight: 300;
+.wwc-nav-first-link {
+    margin-right: 46px;
 }
 
-.foot a {
-	color: #8b8b8b;
-	text-decoration: underline;
+.wwc-add-task-btn {
+    display: inline-block;
+    margin: 16px 32px 16px auto;
+    padding: 10px 40px;
+    background-color: #72c0db !important;
+}
+.active {
+    background-color: #194767!important;
+    border: 1px solid rgba(0,0,0,.125) !important;
 }
 
-.centered {
-	text-align: center;
+.list-group-item {
+    padding: 1.15rem 1.25rem;
 }
 
-@media all and (max-width: 770px) {
-	.titles h1 {
-		font-size: 25px;
-		margin: 15px 0 5px 0;
-	}
+.wwc-tasks-container {
+    margin-right: 32px;
+    margin-left: 32px;
 }
 
-@media all and (max-width: 640px) {
-	.titles h1 {
-		font-size: 23px;
-		margin: 15px 0 5px 0;
-	}
-	.titles h2 {
-		font-size: 15px;
-	}
-	.titles .documentation {
-		margin-left: 10px;
-	}
+.wwc-tasks-container {
+    border-radius: 30px;
 }
 
-@media all and (max-width: 530px) {
-	.titles h1 {
-		font-size: 20px;
-		margin: 5px 0;
-	}
-	.logo {
-		padding: 0
-	}
-	.logo img {
-		width: 100%
-	}
-	.titles .documentation {
-		margin-left: 0px;
-		margin-top: 5px;
-		display: block;
-	}
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.table-bordered {
+    border-radius: 30px;
+}
+
+.wwc-task-name {
+    width: 60%;
+}
+
+.wwc-task-date-and-actions {
+    width: 20%;
+    line-height: 33.5px;
+}
+
+.table .thead-dark th {
+    background-color: #194767 !important;
+    padding: 0.86rem .75rem;
+    font-weight: normal;
+}
+
+.table td {
+    padding: 0.86rem .75rem;
+    border-top: 1px solid #dee2e6;
+    background-color: white;
+}
+
+.wwc-task-name {
+    line-height: 33.5px;
+}
+
+.wwc-thead-first-element {
+    padding-left: 70px !important;
+}
+
+.wwc-complete-check {
+    margin: 0 18px;
+    font-size: 20px;
+    vertical-align: middle;
+}
+
+.wwc-edit-item {
+    margin-right: 30px;
+}
+
+.wwc-task-name span {
+    color: #72c0db
+}
+
+.wwc-home-link:hover {
+    text-decoration: none;
+}
+
+.wwc-form-wrapper {
+    width: 60%;
+    margin: 0 auto;
+    background: white;
+    margin-top: 50px;
+    padding: 30px 35px;
+}
+
+.wwc-fields-wrapper > div {
+    width: 48%;
+}
+
+.wwc-form-title {
+    font-size: 23px;
+    font-weight: 600;
+    margin-bottom: 24px;
+}
+
+.wwc-cancel-btn {
+    background: #f7f7f6;
+    margin-right: 20px;
+}
+
+.wwc-create-task-btn {
+    background-color: #72c0db;
+}
+
+.wwc-task-date-and-actions .fa-pencil-alt {
+    opacity: 0.4;
+    color: #343a40;
+}
+
+.wwc-task-date-and-actions .fa-pencil-alt:hover {
+    opacity: 1;
+}
+
+.wwc-task-date-and-actions .fa-trash-alt {
+    opacity: 0.4;
+    color: red;
+}
+
+.wwc-task-date-and-actions .fa-trash-alt:hover {
+    opacity: 1;
+}
+
+.wwc-task-name .fa-times-circle {
+    color: #343a40;
+    opacity: 0.40;
+}
+
+.wwc-task-name .fa-times-circle:hover {
+    opacity: 1;
+    color: red;
+}
+
+.wwc-task-title { 
+    color: #72c0db;
+    vertical-align: middle;
+}
+
+.wwc-task-title:hover { color: #72c0db; }
+
+.wwc-button-remove-task,
+.wwc-button-complete-task {
+    padding: 0;
+    border: none;
+}
+
+.wwc-form-remove-task,
+.wwc-form-complete-task
+{ display: inline; }
+
+.wwc-confirm-delete-btn {
+    background:#72c0db !important;
+}
+
+.wwc-task-completed {
+    color: green;
+    opacity: 0.70;
+}
+
+.wwc-task-completed:hover {
+    color: green;
+}
+
+.wwc-task-incompleted {
+    color: #343a40;
+    opacity: 0.70;
+}
+
+.wwc-task-incompleted:hover {
+    color: #343a40;
+}
+
+#wwc-notasks-msg {
+    padding: 48px 20px;
+    text-align: center;
+    color: gray;
 }

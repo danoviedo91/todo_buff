@@ -1,0 +1,7 @@
+create_table("todoes") {
+	t.Column("id", "uuid", {primary: true})
+	t.Column("title", "string", {})
+	t.Column("description", "string", {})
+	t.Column("deadline", "timestamp", {})
+	t.Column("completed", "bool", {})
+}

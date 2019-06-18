@@ -6,21 +6,35 @@ import (
 
 	"github.com/danoviedo91/todo_buff/models"
 	"github.com/gobuffalo/buffalo"
+	"github.com/gofrs/uuid"
 )
 
-// HomeHandler is a default handler to serve up
-// a home page.
-func HomeHandler(c buffalo.Context) error {
+// DeleteTodo default implementation.
+func DeleteTodo(c buffalo.Context) error {
 
 	// Establish database connection
 	db := models.DB
+	deleteTodo := &models.Todo{}
+	UUID, err := uuid.FromString(c.Param("id"))
+
+	if err != nil {
+		log.Print(err)
+	}
+
+	deleteTodo.ID = UUID
+
+	// Delete record given the id
+	err = db.Destroy(deleteTodo)
+
+	if err != nil {
+		log.Print(err)
+	}
 
 	// Initialize database-query variables
 
 	allRecords, records := []models.Todo{}, []models.Todo{}
-	pendingTasksNumber := 0
 
-	err := db.All(&allRecords)
+	err = db.All(&allRecords)
 
 	if err != nil {
 		log.Fatal(err)
@@ -34,7 +48,7 @@ func HomeHandler(c buffalo.Context) error {
 		false,
 	}
 
-	// Assign values to variables...
+	pendingTasksNumber := 0
 
 	// If /?completed=true
 
@@ -65,7 +79,6 @@ func HomeHandler(c buffalo.Context) error {
 		pendingTasksNumber = len(records)
 		records = allRecords
 	}
-
 	// Catch if there are tasks to show or not...
 
 	defaultMsgFlag := false
@@ -73,6 +86,8 @@ func HomeHandler(c buffalo.Context) error {
 	if len(records) == 0 {
 		defaultMsgFlag = true
 	}
+
+	// Prepare to send data to template
 
 	// Prepare to send data to template
 
