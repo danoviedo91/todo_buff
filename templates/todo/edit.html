@@ -1,0 +1,28 @@
+<%= form_for(todo, {action: updatePath(), method: "PUT", class: "wwc-form-wrapper shadow-sm"}) { %>
+    <h3 class="wwc-form-title">Edit Task</h3>
+		<div class="wwc-fields-wrapper d-flex justify-content-between">
+				<%= f.InputTag("Title", {}) %>
+				<%= f.InputTag("Deadline", {type: "date", value: todoCurrentDate}) %>
+		</div>
+
+			<%= f.TextArea("Description", {rows: 4}) %>
+    
+    <div class="form-group wwc-hidden">
+        <input name="ID" type="text" class="form-control" id="todo-id" value="<%= todo.ID %>">
+    </div>
+    <div class="form-group wwc-hidden">
+        <input name="Completed" type="text" class="form-control" id="todo-completed"
+            value="<%= todo.Completed %>">
+    </div>
+    <div class="d-flex justify-content-end">
+        <%= if (session.Get("filterStatus") == "completed") { %>
+        <a class="btn wwc-cancel-btn" href="/?status=completed">Cancel</a>
+        <% } else if (session.Get("filterStatus") == "incompleted") { %>
+        <a class="btn wwc-cancel-btn" href="/?status=incompleted">Cancel</a>
+        <% } else { %>
+        <a class="btn wwc-cancel-btn" href="/">Cancel</a>
+        <% } %>
+        <input name="authenticity_token" type="hidden" value="<%= authenticity_token %>">
+        <button type="submit" class="btn text-white wwc-create-task-btn">Edit Task</button>
+    </div>
+<% } %>

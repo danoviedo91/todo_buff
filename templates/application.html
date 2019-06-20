@@ -1,59 +1,64 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta charset="utf-8">
-    <title>Todo List</title>
-    <%= stylesheetTag("application.css") %>
-    <meta name="csrf-param" content="authenticity_token" />
-    <meta name="csrf-token" content="<%= authenticity_token %>" />
-    <link rel="icon" href="<%= assetPath("images/favicon.ico") %>">
-  </head>
-  <body>
 
-    <header>
-      <nav class="wwc-navbar navbar navbar-light bg-light text-white shadow">
-        <div class="d-flex">
-          <a href="/" class="wwc-home-link"><span class="wwc-navbar-brand navbar-brand mb-0 h1 text-white d-flex align-items-center font-size-navbar">ToDo List</span></a>
-          <div class="wwc-uncompleted-and-date">
-            <span class="wwc-number-of-incompleted-tasks"><%= pendingTasksNumber %> Incompleted Tasks</span><br>
-            <span class="wwc-today-date"></span>
-              <%= currentDateTime.Weekday() %>
-              <%= currentDateTime.Day() %>
-              <%= currentDateTime.Month() %>
-              <%= currentDateTime.Year() %>
-            </span>
-          </div>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8">
+  <title>Todo List</title>
+  <%= stylesheetTag("application.css") %>
+  <meta name="csrf-param" content="authenticity_token" />
+  <meta name="csrf-token" content="<%= authenticity_token %>" />
+  <link rel="icon" href="<%= assetPath("images/favicon.ico") %>">
+</head>
+
+<body>
+
+  <header>
+    <nav class="wwc-navbar navbar navbar-light bg-light text-white shadow">
+      <div class="d-flex">
+        <a href="/" class="wwc-home-link"><span
+            class="wwc-navbar-brand navbar-brand mb-0 h1 text-white d-flex align-items-center font-size-navbar">ToDo
+            List</span></a>
+        <div class="wwc-uncompleted-and-date">
+          <span class="wwc-number-of-incompleted-tasks"><%= session.Get("numberOfPendingTodoes") %> Incompleted Tasks</span><br>
+          <span class="wwc-today-date"></span>
+          <span class="wwc-today-date">
+          <%= timeNow() %>
+          </span>
         </div>
-  
-        <div>
-          <ul class="d-flex align-items-center list-unstyled m-0">
-  
-            <%= if (!filterStatus.Completed && !filterStatus.Incompleted && mainViewFlag) { %>
-            <li><a href="/" class="text-white wwc-nav-link wwc-nav-first-link wwc-active-link">All Tasks</a></li>
-            <% } else { %>
-            <li><a href="/" class="text-white wwc-nav-link wwc-nav-first-link">All Tasks</a></li>
-            <% } %>
-  
-            <%= if (filterStatus.Incompleted && mainViewFlag) { %>
-            <li><a href="/?status=incompleted" class="text-white wwc-nav-link wwc-nav-first-link wwc-active-link">Incompleted Tasks</a></li>
-            <% } else { %>
-            <li><a href="/?status=incompleted" class="text-white wwc-nav-link wwc-nav-first-link">Incompleted Tasks</a></li>
-            <% } %>
-  
-            <%= if (filterStatus.Completed && mainViewFlag) { %>
-            <li><a href="/?status=completed" class="text-white wwc-nav-link wwc-active-link">Completed Tasks</a></li>
-            <% } else { %>
-            <li><a href="/?status=completed" class="text-white wwc-nav-link">Completed Tasks</a></li>
-            <% } %>
-            
-          </ul>
-        </div>
-      </nav>
-    </header>
+      </div>
 
-    <%= yield %>
+      <div>
+        <ul class="d-flex align-items-center list-unstyled m-0">
+          
+          <%= if (session.Get("filterStatus") == "" && mainViewFlag) { %>
+          <li><a href="/" class="text-white wwc-nav-link wwc-nav-first-link wwc-active-link">All Tasks</a></li>
+          <% } else { %>
+          <li><a href="/" class="text-white wwc-nav-link wwc-nav-first-link">All Tasks</a></li>
+          <% } %>
 
-    <%= javascriptTag("application.js") %>
-  </body>
+          <%= if (session.Get("filterStatus") == "incompleted" && mainViewFlag) { %>
+          <li><a href="/?status=incompleted"
+              class="text-white wwc-nav-link wwc-nav-first-link wwc-active-link">Incompleted Tasks</a></li>
+          <% } else { %>
+          <li><a href="/?status=incompleted" class="text-white wwc-nav-link wwc-nav-first-link">Incompleted Tasks</a>
+          </li>
+          <% } %>
+
+          <%= if (session.Get("filterStatus") == "completed" && mainViewFlag) { %>
+          <li><a href="/?status=completed" class="text-white wwc-nav-link wwc-active-link">Completed Tasks</a></li>
+          <% } else { %>
+          <li><a href="/?status=completed" class="text-white wwc-nav-link">Completed Tasks</a></li>
+          <% } %>
+
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <%= yield %>
+
+  <%= javascriptTag("application.js") %>
+</body>
+
 </html>

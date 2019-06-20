@@ -7,6 +7,7 @@ import (
 
 	"github.com/gobuffalo/pop"
 	"github.com/gobuffalo/validate"
+	"github.com/gobuffalo/validate/validators"
 	"github.com/gofrs/uuid"
 )
 
@@ -45,13 +46,19 @@ func (t *Todo) Validate(tx *pop.Connection) (*validate.Errors, error) {
 // ValidateCreate gets run every time you call "pop.ValidateAndCreate" method.
 // This method is not required and may be deleted.
 func (t *Todo) ValidateCreate(tx *pop.Connection) (*validate.Errors, error) {
-	return validate.NewErrors(), nil
+	return validate.Validate(
+		&validators.StringIsPresent{Field: t.Title, Name: "Title", Message: "Todo title cannot be blank"},
+		//&validators.TimeIsPresent{Field: t.Deadline, Name: "Deadline"},
+	), nil
 }
 
 // ValidateUpdate gets run every time you call "pop.ValidateAndUpdate" method.
 // This method is not required and may be deleted.
 func (t *Todo) ValidateUpdate(tx *pop.Connection) (*validate.Errors, error) {
-	return validate.NewErrors(), nil
+	return validate.Validate(
+		&validators.StringIsPresent{Field: t.Title, Name: "Title", Message: "Todo title cannot be blank"},
+		//&validators.TimeIsPresent{Field: t.Deadline, Name: "Deadline"},
+	), nil
 }
 
 // ---- TODO FRONT END EDIT METHODS ---- //

@@ -8,6 +8,7 @@ import (
 	paramlogger "github.com/gobuffalo/mw-paramlogger"
 	"github.com/unrolled/secure"
 
+	"github.com/danoviedo91/todo_buff/actions/middleware"
 	"github.com/danoviedo91/todo_buff/models"
 	"github.com/gobuffalo/buffalo-pop/pop/popmw"
 	i18n "github.com/gobuffalo/mw-i18n"
@@ -58,14 +59,16 @@ func App() *buffalo.App {
 		// Setup and use translations:
 		app.Use(translations())
 
-		app.GET("/", HomeHandler)
-		app.GET("/new", NewTodo)             //http.HandleFunc("/new", actions.New)
-		app.POST("/create", CreateTodo)      // http.HandleFunc("/create", actions.Create)
-		app.DELETE("/delete", DeleteTodo)    // http.HandleFunc("/delete", actions.Delete)
-		app.GET("/edit", EditTodo)           // http.HandleFunc("/edit", actions.Edit)
-		app.PUT("/update", UpdateTodo)       // http.HandleFunc("/update", actions.Update)
-		app.GET("/show", ShowTodo)           // http.HandleFunc("/show", actions.Show)
-		app.PATCH("/complete", CompleteTodo) // http.HandleFunc("/complete", actions.Complete)
+		app.Use(middleware.HeaderInfo)
+
+		app.GET("/", List)                                  //ok
+		app.GET("/new", NewTodo)                            //ok
+		app.POST("/create", CreateTodo)                     //ok
+		app.DELETE("/delete/{todo_id}", DeleteTodo)         //ok
+		app.GET("/edit/{todo_id}", EditTodo)                //todo
+		app.PUT("/update", UpdateTodo)                      //todo
+		app.GET("/show/{todo_id}", ShowTodo)                //ok
+		app.PATCH("/change_status/{todo_id}", CompleteTodo) //ok
 
 		app.ServeFiles("/", assetsBox) // serve files from the public directory
 	}

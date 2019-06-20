@@ -1,11 +1,11 @@
 <form method="POST" action="/update" class="wwc-form-wrapper shadow-sm">
     <h3 class="wwc-form-title">View Task</h3>
         <div class="wwc-fields-wrapper">
-            <p><strong>Title:</strong>&nbsp;<%= taskStruct.Title %></p>
-            <p><strong>Description:</strong>&nbsp;<%= taskStruct.Description %></p>
-            <p><strong>Complete By:</strong>&nbsp;<%= taskStruct.Deadline.Day() %> <%= taskStruct.Deadline.Month() %> <%= taskStruct.Deadline.Year() %></p>
+            <p><strong>Title:</strong>&nbsp;<%= todo.Title %></p>
+            <p><strong>Description:</strong>&nbsp;<%= todo.Description %></p>
+            <p><strong>Complete By:</strong>&nbsp;<%= todo.Deadline.Day() %> <%= todo.Deadline.Month() %> <%= todo.Deadline.Year() %></p>
             <p><strong>Completed:</strong>
-            <%= if (taskStruct.Completed) { %>
+            <%= if (todo.Completed) { %>
             Yes
             <% } else { %>
             No
@@ -14,9 +14,9 @@
         </div>
         
     <div class="d-flex justify-content-end">
-        <%= if (filterStatus.Completed) { %>
+        <%= if (session.Get("filterStatus") == "completed") { %>
         <a class="btn wwc-cancel-btn" href="/?status=completed">Done</a>
-        <% } else if (filterStatus.Incompleted) { %>
+        <% } else if (session.Get("filterStatus") == "incompleted") { %>
         <a class="btn wwc-cancel-btn" href="/?status=incompleted">Done</a>
         <% } else { %>
         <a class="btn wwc-cancel-btn" href="/">Done</a>
