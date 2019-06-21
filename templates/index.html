@@ -1,92 +1,68 @@
 <div class="d-flex justify-content-end">
-  <%= if (session.Get("filterStatus") == "completed") { %>
-  <a class="btn wwc-add-task-btn text-white" href="/new?status=completed">Add Task</a>
-  <% } else if (session.Get("filterStatus") == "incompleted") { %>
-  <a class="btn wwc-add-task-btn text-white" href="/new?status=incompleted">Add Task</a>
-  <% } else { %>
-  <a class="btn wwc-add-task-btn text-white" href="/new">Add Task</a>
-  <% } %>
+  <a class="btn wwc-add-task-btn text-white" href="<%= newPath() %>">Add Task</a>
 </div>
 
 <div class="wwc-tasks-container">
-    <table class="table table-borderless" id="wwc-task-table">
-      <thead class="thead-dark">
-        <tr>
-          <th class="wwc-task-name wwc-thead-first-element">Task</th>
-          <th class="wwc-task-date-and-actions">Complete by</th>
-          <th class="wwc-task-date-and-actions">Actions</th>
-        </tr>
-      </thead>
+  <table class="table table-borderless" id="wwc-task-table">
+    <thead class="thead-dark">
+      <tr>
+        <th class="wwc-task-name wwc-thead-first-element">Task</th>
+        <th class="wwc-task-date-and-actions">Complete by</th>
+        <th class="wwc-task-date-and-actions">Actions</th>
+      </tr>
+    </thead>
 
-      <%= if ( len(todo) == 0 ) { %>
+    <%= if ( defaultMsg != "" ) { %>
 
-        <%= if (session.Get("filterStatus") == "completed") { %>
+    <tbody>
+      <tr>
+        <td colspan="3" id="wwc-notasks-msg"><%= defaultMsg %></td>
+      </tr>
+    </tbody>
 
-        <tr><td colspan="3" id="wwc-notasks-msg">No completed tasks to show</td></tr>
+    <% } else { %>
 
-        <% } else if (session.Get("filterStatus") == "incompleted") { %>
+    <tbody>
 
-        <tr><td colspan="3" id="wwc-notasks-msg">No incompleted tasks to show</td></tr>
+      <%= for (task) in todo { %>
 
-        <% } else { %>
+      <tr>
 
-        <tr><td colspan="3" id="wwc-notasks-msg">No tasks to show</td></tr>
+        <td class="wwc-task-name">
 
-        <% } %>
+          <%= if (task.Completed) { %>
+          <a class="wwc-complete-check wwc-task-completed" href="<%= changeStatusPath({todo_id: task.ID}) %>"
+            data-method="PATCH"><i class="far fa-check-circle"></i></a>
+          <% } else { %>
+          <a class="wwc-complete-check wwc-task-incompleted" href="<%= changeStatusPath({todo_id: task.ID}) %>"
+            data-method="PATCH"><i class="far fa-check-circle"></i></a>
+          <% } %>
 
-      <% } else { %>
+          <%= if (session.Get("filterStatus") == "completed") { %>
+          <a href="<%= showPath({todo_id: task.ID, status: "completed" }) %>"
+            class="wwc-task-title"><%= task.Title %></a>
+          <% } else if (session.Get("filterStatus") == "incompleted") { %>
+          <a href="<%= showPath({todo_id: task.ID, status: "incompleted" }) %>"
+            class="wwc-task-title"><%= task.Title %></a>
+          <% } else { %>
+          <a href="<%= showPath({todo_id: task.ID }) %>" class="wwc-task-title"><%= task.Title %></a>
+          <% } %>
 
-        <tbody>
+        </td>
 
-        <%= for (task) in todo { %>
-          <tr>
-            <td class="wwc-task-name">
-  
-              <%= if (session.Get("filterStatus") == "completed") { %>
-                <a class="wwc-complete-check wwc-task-completed" href="<%= changeStatusPath({todo_id: task.ID, status: "completed"}) %>" data-method="PATCH"><i class="far fa-check-circle"></i></a>
-              <% } else if (session.Get("filterStatus") == "incompleted") { %>
-                <a class="wwc-complete-check wwc-task-incompleted" href="<%= changeStatusPath({todo_id: task.ID, status: "incompleted"}) %>" data-method="PATCH"><i class="far fa-check-circle"></i></a>
-              <% } else { %>
-                <%= if (task.Completed) { %>
-                <a class="wwc-complete-check wwc-task-completed" href="<%= changeStatusPath({todo_id: task.ID, action: "incomplete"}) %>" data-method="PATCH"><i class="far fa-check-circle"></i></a>
-                <% } else { %>
-                <a class="wwc-complete-check wwc-task-incompleted" href="<%= changeStatusPath({todo_id: task.ID, action: "complete"}) %>" data-method="PATCH"><i class="far fa-check-circle"></i></a>
-                <% } %>
-              <% } %>
-              
-              <%= if (session.Get("filterStatus") == "completed") { %>
-              <a href="<%= showPath({todo_id: task.ID, status: "completed" }) %>" class="wwc-task-title"><%= task.Title %></a>
-              <% } else if (session.Get("filterStatus") == "incompleted") { %>
-              <a href="<%= showPath({todo_id: task.ID, status: "incompleted" }) %>" class="wwc-task-title"><%= task.Title %></a>
-              <% } else { %>
-              <a href="<%= showPath({todo_id: task.ID }) %>" class="wwc-task-title"><%= task.Title %></a>
-              <% } %>
-  
-            </td>
-            <td class="wwc-task-date-and-actions"><%= task.Deadline.Day() %> <%= task.Deadline.Month() %> <%= task.Deadline.Year() %></td>
-            <td class="wwc-task-date-and-actions">
-  
-              <%= if (session.Get("filterStatus") == "completed") { %>
-              <a href="<%= editPath({todo_id: task.ID, status: "completed"}) %>" class="wwc-edit-item"><i class="fas fa-pencil-alt"></i></a>
-              <% } else if (session.Get("filterStatus") == "incompleted") { %>
-              <a href="<%= editPath({todo_id: task.ID, status: "incompleted"}) %>" class="wwc-edit-item"><i class="fas fa-pencil-alt"></i></a>
-              <% } else { %>
-              <a href="<%= editPath({todo_id: task.ID}) %>" class="wwc-edit-item"><i class="fas fa-pencil-alt"></i></a>
-              <% } %>
-  
-              <%= if (session.Get("filterStatus") == "completed") { %>
-                <a class="js-wwc-trash-btn" href="<%= deletePath({todo_id: task.ID, status: "completed"}) %>" data-method="DELETE" data-confirm="Are you sure?"><i class="far fa-trash-alt"></i></a>
-              <% } else if (session.Get("filterStatus") == "incompleted") { %>
-              <a class="js-wwc-trash-btn" href="<%= deletePath({todo_id: task.ID, status: "incompleted"}) %>" data-method="DELETE" data-confirm="Are you sure?"><i class="far fa-trash-alt"></i></a>
-              <% } else { %>
-              <a class="js-wwc-trash-btn" href="<%= deletePath({todo_id: task.ID}) %>" data-method="DELETE" data-confirm="Are you sure?"><i class="far fa-trash-alt"></i></a>
-              <% } %>
-            </td>
-          </tr>
+        <td class="wwc-task-date-and-actions"><%= task.Deadline.Day() %> <%= task.Deadline.Month() %>
+          <%= task.Deadline.Year() %></td>
 
-        <% } %>
-      </tbody>
+        <td class="wwc-task-date-and-actions">
+          <a href="<%= editPath({todo_id: task.ID}) %>" class="wwc-edit-item"><i class="fas fa-pencil-alt"></i></a>
+          <a class="js-wwc-trash-btn" href="<%= deletePath({todo_id: task.ID}) %>" data-method="DELETE"
+            data-confirm="Are you sure?"><i class="far fa-trash-alt"></i></a>
+        </td>
+
+      </tr>
+
       <% } %>
-    </table>
-  </div>
-
+    </tbody>
+    <% } %>
+  </table>
+</div>

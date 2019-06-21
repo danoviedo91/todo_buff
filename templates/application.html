@@ -21,16 +21,15 @@
             List</span></a>
         <div class="wwc-uncompleted-and-date">
           <span class="wwc-number-of-incompleted-tasks"><%= session.Get("numberOfPendingTodoes") %> Incompleted Tasks</span><br>
-          <span class="wwc-today-date"></span>
           <span class="wwc-today-date">
-          <%= timeNow() %>
+            <%= timeNow() %>
           </span>
         </div>
       </div>
 
       <div>
         <ul class="d-flex align-items-center list-unstyled m-0">
-          
+
           <%= if (session.Get("filterStatus") == "" && mainViewFlag) { %>
           <li><a href="/" class="text-white wwc-nav-link wwc-nav-first-link wwc-active-link">All Tasks</a></li>
           <% } else { %>

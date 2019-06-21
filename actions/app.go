@@ -61,14 +61,16 @@ func App() *buffalo.App {
 
 		app.Use(middleware.HeaderInfo)
 
-		app.GET("/", List)                                  //ok
-		app.GET("/new", NewTodo)                            //ok
-		app.POST("/create", CreateTodo)                     //ok
-		app.DELETE("/delete/{todo_id}", DeleteTodo)         //ok
-		app.GET("/edit/{todo_id}", EditTodo)                //todo
-		app.PUT("/update", UpdateTodo)                      //todo
-		app.GET("/show/{todo_id}", ShowTodo)                //ok
-		app.PATCH("/change_status/{todo_id}", CompleteTodo) //ok
+		app.Middleware.Skip(middleware.HeaderInfo, UpdateTodo, CreateTodo, NewTodo, EditTodo, DeleteTodo, CompleteTodo)
+
+		app.GET("/", List)
+		app.GET("/new", NewTodo)
+		app.POST("/create", CreateTodo)
+		app.DELETE("/delete/{todo_id}", DeleteTodo)
+		app.GET("/edit/{todo_id}", EditTodo)
+		app.PUT("/update", UpdateTodo)
+		app.GET("/show/{todo_id}", ShowTodo)
+		app.PATCH("/change_status/{todo_id}", CompleteTodo)
 
 		app.ServeFiles("/", assetsBox) // serve files from the public directory
 	}

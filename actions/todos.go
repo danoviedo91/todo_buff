@@ -46,10 +46,27 @@ func List(c buffalo.Context) error {
 
 	}
 
+	var defaultMsg string
+
+	if len(todo) == 0 {
+
+		filterStatus := c.Session().Get("filterStatus").(string)
+
+		if filterStatus == "completed" {
+			defaultMsg = "No completed tasks to show"
+		} else if filterStatus == "incompleted" {
+			defaultMsg = "No incompleted tasks to show"
+		} else {
+			defaultMsg = "No tasks to show"
+		}
+
+	}
+
 	// Prepare to send data to template
 
 	c.Set("todo", todo)
 	c.Set("mainViewFlag", true)
+	c.Set("defaultMsg", defaultMsg)
 
 	return c.Render(200, r.HTML("index.html"))
 
@@ -61,7 +78,6 @@ func NewTodo(c buffalo.Context) error {
 	todo := models.Todo{}
 
 	c.Set("todo", todo)
-	c.Set("mainViewFlag", true)
 
 	return c.Render(200, r.HTML("todo/new.html"))
 
@@ -122,11 +138,11 @@ func DeleteTodo(c buffalo.Context) error {
 
 	// Redirect to "/" with filter, if applies
 
-	var status string
+	status := c.Session().Get("filterStatus").(string)
 
-	if c.Param("status") != "" {
+	if status != "" {
 
-		status = "?status=" + c.Param("status")
+		status = "?status=" + status
 
 	}
 
@@ -154,11 +170,11 @@ func CompleteTodo(c buffalo.Context) error {
 
 	// Redirect to "/" with filter, if applies
 
-	var status string
+	status := c.Session().Get("filterStatus").(string)
 
-	if c.Param("status") != "" {
+	if status != "" {
 
-		status = "?status=" + c.Param("status")
+		status = "?status=" + status
 
 	}
 
@@ -181,7 +197,6 @@ func EditTodo(c buffalo.Context) error {
 
 	c.Set("todo", todo)
 	c.Set("todoCurrentDate", strconv.Itoa(todo.Deadline.Year())+"-"+todo.MonthFormatted()+"-"+todo.DayFormatted())
-	c.Set("mainViewFlag", true)
 
 	return c.Render(200, r.HTML("todo/edit.html"))
 }
@@ -208,7 +223,6 @@ func UpdateTodo(c buffalo.Context) error {
 		c.Set("errors", verrs.Errors)
 		c.Set("todo", todo)
 		c.Set("todoCurrentDate", strconv.Itoa(todo.Deadline.Year())+"-"+todo.MonthFormatted()+"-"+todo.DayFormatted())
-		c.Set("mainViewFlag", true)
 		return c.Render(422, r.HTML("todo/edit.html"))
 
 	}
@@ -234,7 +248,6 @@ func ShowTodo(c buffalo.Context) error {
 	// Prepare to send data to template
 
 	c.Set("todo", todo)
-	c.Set("mainViewFlag", true)
 
 	return c.Render(200, r.HTML("todo/show.html"))
 }
