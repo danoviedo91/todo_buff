@@ -140,9 +140,14 @@ a:hover {
 }
 
 .wwc-complete-check {
-    margin: 0 18px;
+    margin: 0 10px;
     font-size: 20px;
     vertical-align: middle;
+    border: none;
+}
+
+.wwc-complete-check:focus {
+    outline: none;
 }
 
 .wwc-edit-item {

@@ -138,11 +138,11 @@ func DeleteTodo(c buffalo.Context) error {
 
 	// Redirect to "/" with filter, if applies
 
-	status := c.Session().Get("filterStatus").(string)
+	var status string
 
-	if status != "" {
+	if c.Session().Get("filterStatus") != "" {
 
-		status = "?status=" + status
+		status = "?status=" + c.Session().Get("filterStatus").(string)
 
 	}
 

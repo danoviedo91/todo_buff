@@ -31,11 +31,21 @@
         <td class="wwc-task-name">
 
           <%= if (task.Completed) { %>
-          <a class="wwc-complete-check wwc-task-completed" href="<%= changeStatusPath({todo_id: task.ID}) %>"
-            data-method="PATCH"><i class="far fa-check-circle"></i></a>
+            <form action="<%= changeStatusPath({todo_id: task.ID}) %>" class="d-inline-block" method="POST">
+              <input type="hidden" name="_method" value="PATCH">
+              <input name="authenticity_token" type="hidden" value="<%= authenticity_token %>">
+              <button class="wwc-complete-check wwc-task-completed" type="submit"><i class="far fa-check-circle"></i></button>
+            </form>
+          <!-- <a class="wwc-complete-check wwc-task-completed" href="<%= changeStatusPath({todo_id: task.ID}) %>"
+            data-method="PATCH"></a> -->
           <% } else { %>
-          <a class="wwc-complete-check wwc-task-incompleted" href="<%= changeStatusPath({todo_id: task.ID}) %>"
-            data-method="PATCH"><i class="far fa-check-circle"></i></a>
+            <form action="<%= changeStatusPath({todo_id: task.ID}) %>" class="d-inline-block" method="POST">
+              <input type="hidden" name="_method" value="PATCH">
+              <input name="authenticity_token" type="hidden" value="<%= authenticity_token %>">
+              <button class="wwc-complete-check wwc-task-incompleted" type="submit"><i class="far fa-check-circle"></i></button>
+            </form>
+          <!-- <a class="wwc-complete-check wwc-task-incompleted" href="<%= changeStatusPath({todo_id: task.ID}) %>"
+            data-method="PATCH"><i class="far fa-check-circle"></i></a> -->
           <% } %>
 
           <%= if (session.Get("filterStatus") == "completed") { %>
