@@ -3,6 +3,7 @@ package actions
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/danoviedo91/todo_buff/models"
 	"github.com/gobuffalo/packr/v2"
@@ -189,24 +190,189 @@ func (as *ActionSuite) Test_Delete_Todo() {
 func (as *ActionSuite) Test_Change_Status_Todo() {
 
 	todo := &models.Todo{
-		ID:          uuid.Must(uuid.NewV4()),
-		Title:       "I'm being completed",
-		Description: "Some completeable description",
+		ID:    uuid.Must(uuid.NewV4()),
+		Title: "I'm being completed",
 	}
 
-	requestBody := struct {
-		Todo    *models.Todo
-		_method string
-	}{
-		todo,
-		"PATCH",
+	as.Session.Set("filterStatus", "") // Necessary for redirection inside the handler
+
+	err := as.DB.Create(todo)
+	as.NoError(err)
+
+	// Check when updates from false to true
+
+	res := as.JSON(fmt.Sprintf("/change_status/%s", todo.ID.String())).Patch(todo)
+
+	err = as.DB.First(todo)
+	as.NoError(err)
+
+	as.Equal(301, res.Code)
+	as.Equal("/", res.Location())
+	as.Equal(true, todo.Completed)
+
+	// Check when updates from true to false
+
+	res = as.JSON(fmt.Sprintf("/change_status/%s", todo.ID.String())).Patch(todo)
+
+	err = as.DB.First(todo)
+	as.NoError(err)
+
+	as.Equal(301, res.Code)
+	as.Equal("/", res.Location())
+	as.Equal(false, todo.Completed)
+
+}
+
+func (as *ActionSuite) Test_Show_Todo() {
+
+	todo := &models.Todo{
+		ID:          uuid.Must(uuid.NewV4()),
+		Title:       "I am being showed up!",
+		Description: "A description to be showed up!",
+		Completed:   false,
 	}
 
 	err := as.DB.Create(todo)
 	as.NoError(err)
 
-	res := as.HTML(fmt.Sprintf("/change_status/%s", todo.ID.String())).Post(requestBody)
+	res := as.HTML(fmt.Sprintf("/show/%s", todo.ID.String())).Get()
+	body := res.Body.String()
+
+	as.Contains(body, fmt.Sprintf(`<p><strong>Title:</strong>&nbsp;%s</p>`, todo.Title))
+	as.Contains(body, fmt.Sprintf(`<p><strong>Description:</strong>&nbsp;%s</p>`, todo.Description))
+	as.Contains(body, "No") // From todo.Completed : false
+	as.Equal(200, res.Code)
+
+}
+
+func (as *ActionSuite) Test_Edit_Todo() {
+
+	layout := "2006/01/02"
+	timeString := "2019/02/02"
+	timeParsed, err := time.Parse(layout, timeString)
+
+	as.NoError(err)
+
+	todo := &models.Todo{
+		Title:       "I will edit this task",
+		Description: "I will edit this description",
+		Deadline:    timeParsed,
+		Completed:   false,
+	}
+
+	err = as.DB.Create(todo)
+
+	as.NoError(err)
+
+	res := as.HTML(fmt.Sprintf("/edit/%s", todo.ID)).Get()
+	body := res.Body.String()
+
+	as.Contains(body, fmt.Sprintf(`<input class=" form-control" id="todo-Title" name="Title" type="text" value="%s" />`, todo.Title))
+	as.Contains(body, fmt.Sprintf(`<textarea class=" form-control" id="todo-Description" name="Description" rows="4">%s</textarea>`, todo.Description))
+	as.Contains(body, fmt.Sprintf(`<input class=" form-control" id="todo-Deadline" name="Deadline" type="date" value="%v-%v-%v" />`, todo.Deadline.Year(), todo.MonthFormatted(), todo.DayFormatted()))
+	as.Equal(200, res.Code)
+
+}
+
+func (as *ActionSuite) Test_Success_Update_Todo() {
+
+	id := uuid.Must(uuid.NewV4())
+
+	// Initial todo, create record in the db
+
+	layout := "2006/01/02"
+	timeString := "2019/02/02"
+	timeParsed, err := time.Parse(layout, timeString)
+
+	as.NoError(err)
+
+	todo := &models.Todo{
+		ID:          id,
+		Title:       "I will edit this task",
+		Description: "I will edit this description",
+		Deadline:    timeParsed,
+		Completed:   false,
+	}
+
+	err = as.DB.Create(todo)
+
+	as.NoError(err)
+
+	// todo - updated struct
+
+	layout = "2006/01/02"
+	timeString = "2019/03/03"
+	timeParsed, err = time.Parse(layout, timeString)
+
+	as.NoError(err)
+
+	todo = &models.Todo{
+		ID:          id,
+		Title:       "Title Updated",
+		Description: "Description Updated",
+		Deadline:    timeParsed,
+		Completed:   false,
+	}
+
+	// Send the request with updated todo
+
+	res := as.HTML("/update").Put(todo)
+
+	// Verification
+
+	as.DB.Find(todo, id)
+
+	as.Equal("Title Updated", todo.Title)
+	as.Equal("Description Updated", todo.Description)
+	as.Equal(timeParsed, todo.Deadline.UTC())
+	as.Equal(fmt.Sprintf("/show/%s", todo.ID), res.Location())
 	as.Equal(301, res.Code)
-	as.Equal("/", res.Location())
+
+}
+
+func (as *ActionSuite) Test_Failed_Update_Todo() {
+
+	id := uuid.Must(uuid.NewV4())
+
+	// Initial todo, create record in the db
+
+	layout := "2006/01/02"
+	timeString := "2019/02/02"
+	timeParsed, err := time.Parse(layout, timeString)
+
+	as.NoError(err)
+
+	todo := &models.Todo{
+		ID:          id,
+		Title:       "I will edit this task",
+		Description: "I will edit this description",
+		Deadline:    timeParsed,
+		Completed:   false,
+	}
+
+	err = as.DB.Create(todo)
+
+	as.NoError(err)
+
+	// Invalid todo - updated struct with NO title
+
+	layout = "2006/01/02"
+	timeString = "2019/03/03"
+	timeParsed, err = time.Parse(layout, timeString)
+
+	as.NoError(err)
+
+	todo = &models.Todo{
+		ID:          id,
+		Description: "Description Updated",
+		Deadline:    timeParsed,
+		Completed:   false,
+	}
+
+	// Send the request with invalid-updated todo
+
+	res := as.HTML("/update").Put(todo)
+
+	as.Equal(422, res.Code)
 
 }
