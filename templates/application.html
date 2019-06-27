@@ -14,6 +14,7 @@
 <body>
 
   <header>
+    <%= if (current_user) { %>
     <nav class="wwc-navbar navbar navbar-light bg-light text-white shadow">
       <div class="d-flex">
         <a href="/" class="wwc-home-link"><span
@@ -27,8 +28,8 @@
         </div>
       </div>
 
-      <div>
-        <ul class="d-flex align-items-center list-unstyled m-0">
+      <div class="ml-auto">
+        <ul class="d-flex align-items-center list-unstyled m-0 mr-5">
 
           <%= if (session.Get("filterStatus") == "" && mainViewFlag) { %>
           <li><a href="/" class="text-white wwc-nav-link wwc-nav-first-link wwc-active-link">All Tasks</a></li>
@@ -52,7 +53,15 @@
 
         </ul>
       </div>
+      <a class="btn wwc-btn-contrast text-white" href="/signout" data-method="DELETE">Sign Out</a>
     </nav>
+    <% } else { %>
+    <nav class="d-flex justify-content-center wwc-navbar navbar navbar-light bg-light text-white shadow">
+      <div class="d-flex">
+        <a href="/" class="wwc-home-link"><span class="navbar-brand mb-0 h1 text-white d-flex align-items-center font-size-navbar m-0">ToDo List App</span></a>
+      </div>
+    </nav>
+    <% } %>
   </header>
 
   <%= yield %>

@@ -37,6 +37,7 @@ ALTER TABLE public.schema_migration OWNER TO postgres;
 
 CREATE TABLE public.todoes (
     id uuid NOT NULL,
+    user_id uuid NOT NULL,
     title character varying(255) NOT NULL,
     description character varying(255) NOT NULL,
     deadline timestamp without time zone NOT NULL,
@@ -49,11 +50,36 @@ CREATE TABLE public.todoes (
 ALTER TABLE public.todoes OWNER TO postgres;
 
 --
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.users (
+    id uuid NOT NULL,
+    first_name character varying(255) NOT NULL,
+    last_name character varying(255) NOT NULL,
+    email character varying(255) NOT NULL,
+    password_hash character varying(255) NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.users OWNER TO postgres;
+
+--
 -- Name: todoes todoes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.todoes
     ADD CONSTRAINT todoes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
 
 
 --

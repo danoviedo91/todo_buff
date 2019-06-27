@@ -20,7 +20,13 @@ func List(c buffalo.Context) error {
 
 	todo := []models.Todo{}
 
-	if err := tx.All(&todo); err != nil {
+	if c.Session().Get("current_user_id") == nil {
+		return c.Render(200, r.HTML("index.html"))
+	}
+
+	userID := c.Session().Get("current_user_id").(uuid.UUID).String()
+
+	if err := tx.Where("user_id = ?", userID).All(&todo); err != nil {
 		log.Fatal(err)
 	}
 
@@ -92,6 +98,8 @@ func CreateTodo(c buffalo.Context) error {
 	if err := c.Bind(&todo); err != nil {
 		return err
 	}
+
+	todo.UserID = c.Session().Get("current_user_id").(uuid.UUID)
 
 	// Validation
 	verrs, err := todo.ValidateCreate(tx)
@@ -211,6 +219,9 @@ func UpdateTodo(c buffalo.Context) error {
 	if err := c.Bind(&todo); err != nil {
 		log.Fatal(err)
 	}
+
+	userID := c.Session().Get("current_user_id").(uuid.UUID)
+	todo.UserID = userID
 
 	// Validation
 	verrs, err := todo.ValidateUpdate(tx)
