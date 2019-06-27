@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/danoviedo91/todo_buff/models"
-	"github.com/gobuffalo/packr/v2"
 	"github.com/gobuffalo/suite"
 	"github.com/gofrs/uuid"
 )
@@ -16,15 +15,7 @@ type ActionSuite struct {
 }
 
 func Test_ActionSuite(t *testing.T) {
-	action, err := suite.NewActionWithFixtures(App(), packr.New("Test_ActionSuite", "../fixtures"))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	as := &ActionSuite{
-		Action: action,
-	}
-
+	as := &ActionSuite{suite.NewAction(App())}
 	suite.Run(t, as)
 }
 
