@@ -1,5 +1,5 @@
 [[scenario]]
-name = "sample user and todoes"
+name = "sample users and todoes"
 
     [[scenario.table]]
         name = "users"
@@ -12,6 +12,15 @@ name = "sample user and todoes"
         last_name = "Oviedo"
         email = "doviedo@wawand.co"
         password_hash = "<%= hash("doviedo") %>" 
+
+    [[scenario.table.row]]
+        id = "<%= uuid() %>"
+        created_at = "<%= now() %>"
+        updated_at = "<%= now() %>"
+        first_name = "Bryan"
+        last_name = "Moslo"
+        email = "bmoslo@wawand.co"
+        password_hash = "<%= hash("bmoslo") %>"   
 
     [[scenario.table]]
         name = "todoes"

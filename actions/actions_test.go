@@ -331,11 +331,22 @@ func (as *ActionSuite) Test_Show_Todo() {
 	as.Equal(302, res.Code)
 	as.Equal("/", res.Location())
 
-	// -------- Logged in... -------- //
+	// -------- Logged in... Impostor testing -------- //
 
-	as.LoadFixture("sample user and todoes")
+	as.LoadFixture("sample users and todoes")
 
 	user := &models.User{}
+	as.NoError(as.DB.Where("first_name = ?", "Bryan").First(user))
+	as.Session.Set("current_user_id", user.ID)
+
+	as.NoError(as.DB.Where("first_name = ?", "Daniel").First(user))
+	as.DB.Where("user_id = ?", user.ID).First(todo)
+	res = as.HTML(fmt.Sprintf("/show/%s", todo.ID.String())).Get()
+
+	as.Equal(404, res.Code)
+
+	// -------- Logged in... -------- //
+
 	as.NoError(as.DB.First(user))
 	as.Session.Set("current_user_id", user.ID)
 
