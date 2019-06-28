@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 
@@ -132,15 +133,20 @@ func CreateTodo(c buffalo.Context) error {
 func DeleteTodo(c buffalo.Context) error {
 
 	tx := c.Value("tx").(*pop.Connection)
-	UUID, err := uuid.FromString(c.Param("todo_id"))
 
-	if err != nil {
-		log.Fatal(err)
+	// Validate current user owns the todo....
+
+	todo := models.Todo{}
+
+	userID := c.Session().Get("current_user_id").(uuid.UUID).String()
+
+	if err := tx.Where("user_id = ?", userID).Find(&todo, c.Param("todo_id")); err != nil {
+		return c.Error(404, errors.New(fmt.Sprintf("could not find todo with id = %v", c.Param("todo_id"))))
 	}
 
-	// Delete record
+	// Delete...
 
-	if err = tx.Destroy(&models.Todo{ID: UUID}); err != nil {
+	if err := tx.Destroy(&todo); err != nil {
 		log.Fatal(err)
 	}
 
@@ -197,11 +203,11 @@ func EditTodo(c buffalo.Context) error {
 
 	todo := models.Todo{}
 
-	if err := tx.Find(&todo, c.Param("todo_id")); err != nil {
-		log.Fatal(err)
-	}
+	userID := c.Session().Get("current_user_id").(uuid.UUID).String()
 
-	// Prepare to send data to template
+	if err := tx.Where("user_id = ?", userID).Find(&todo, c.Param("todo_id")); err != nil {
+		return c.Error(404, errors.New(fmt.Sprintf("could not find todo with id = %v", c.Param("todo_id"))))
+	}
 
 	c.Set("todo", todo)
 	c.Set("todoCurrentDate", strconv.Itoa(todo.Deadline.Year())+"-"+todo.MonthFormatted()+"-"+todo.DayFormatted())
@@ -214,16 +220,25 @@ func UpdateTodo(c buffalo.Context) error {
 
 	tx := c.Value("tx").(*pop.Connection)
 
+	// Validate current user owns the todo....
+
 	todo := models.Todo{}
+
+	userID := c.Session().Get("current_user_id").(uuid.UUID).String()
+
+	if err := tx.Where("user_id = ?", userID).Find(&todo, c.Param("ID")); err != nil {
+		return c.Error(404, errors.New(fmt.Sprintf("could not find todo with id = %v", c.Param("ID"))))
+	}
+
+	// Then bind the form info to the struct...
 
 	if err := c.Bind(&todo); err != nil {
 		log.Fatal(err)
 	}
 
-	userID := c.Session().Get("current_user_id").(uuid.UUID)
-	todo.UserID = userID
+	todo.UserID = c.Session().Get("current_user_id").(uuid.UUID)
 
-	// Validation
+	// Validate non-empty title...
 	verrs, err := todo.ValidateUpdate(tx)
 
 	if err != nil {
@@ -237,6 +252,8 @@ func UpdateTodo(c buffalo.Context) error {
 		return c.Render(422, r.HTML("todo/edit.html"))
 
 	}
+
+	// Update...
 
 	if err := tx.Update(&todo); err != nil {
 		log.Fatal(err)
@@ -252,13 +269,14 @@ func ShowTodo(c buffalo.Context) error {
 
 	todo := models.Todo{}
 
-	if err := tx.Find(&todo, c.Param("todo_id")); err != nil {
-		log.Print(err)
-	}
+	userID := c.Session().Get("current_user_id").(uuid.UUID).String()
 
-	// Prepare to send data to template
+	if err := tx.Where("user_id = ?", userID).Find(&todo, c.Param("todo_id")); err != nil {
+		return c.Error(404, errors.New(fmt.Sprintf("could not find todo with id = %v", c.Param("todo_id"))))
+	}
 
 	c.Set("todo", todo)
 
 	return c.Render(200, r.HTML("todo/show.html"))
+
 }

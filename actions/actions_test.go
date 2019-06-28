@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/danoviedo91/todo_buff/models"
+	"github.com/gobuffalo/packr/v2"
 	"github.com/gobuffalo/suite"
 	"github.com/gofrs/uuid"
 )
@@ -15,13 +16,35 @@ type ActionSuite struct {
 }
 
 func Test_ActionSuite(t *testing.T) {
-	as := &ActionSuite{suite.NewAction(App())}
+
+	action, err := suite.NewActionWithFixtures(App(), packr.New("init user creation", "../fixtures"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	as := &ActionSuite{
+		Action: action,
+	}
 	suite.Run(t, as)
 }
 
 // All custom test functions start from this point
 
 func (as *ActionSuite) Test_Todo_Empty_List() {
+
+	// Load fixture
+
+	as.LoadFixture("init user creation")
+
+	// get the only user from the DB
+	user := &models.User{}
+
+	err := as.DB.First(user)
+
+	as.NoError(err)
+
+	// set the user ID onto the session (log in)
+	as.Session.Set("current_user_id", user.ID)
 
 	res := as.HTML("/").Get()
 	body := res.Body.String()
