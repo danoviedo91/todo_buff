@@ -8,7 +8,6 @@ import (
 	"github.com/danoviedo91/todo_buff/models"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/gobuffalo/suite"
-	"github.com/gofrs/uuid"
 )
 
 type ActionSuite struct {
@@ -17,7 +16,7 @@ type ActionSuite struct {
 
 func Test_ActionSuite(t *testing.T) {
 
-	action, err := suite.NewActionWithFixtures(App(), packr.New("init user creation", "../fixtures"))
+	action, err := suite.NewActionWithFixtures(App(), packr.New("fixtures", "../fixtures"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -30,24 +29,27 @@ func Test_ActionSuite(t *testing.T) {
 
 // All custom test functions start from this point
 
-func (as *ActionSuite) Test_Todo_Empty_List() {
+func (as *ActionSuite) Test_Empty_List_Todoes() {
 
-	// Load fixture
-
-	as.LoadFixture("init user creation")
-
-	// get the only user from the DB
-	user := &models.User{}
-
-	err := as.DB.First(user)
-
-	as.NoError(err)
-
-	// set the user ID onto the session (log in)
-	as.Session.Set("current_user_id", user.ID)
+	// -------- Logged out... -------- //
 
 	res := as.HTML("/").Get()
 	body := res.Body.String()
+
+	as.Contains(body, `<div class="text-center wwc-mb-50">Welcome! Please log-in or register to continue</div>`)
+	as.Equal(200, res.Code)
+
+	// -------- Logged in... -------- //
+
+	as.LoadFixture("sample user")
+
+	user := &models.User{}
+	as.NoError(as.DB.First(user))
+
+	as.Session.Set("current_user_id", user.ID)
+
+	res = as.HTML("/").Get()
+	body = res.Body.String()
 
 	as.Contains(body, fmt.Sprintf(`<td colspan="3" id="wwc-notasks-msg">No tasks to show</td>`))
 
@@ -55,68 +57,64 @@ func (as *ActionSuite) Test_Todo_Empty_List() {
 
 }
 
-func (as *ActionSuite) Test_List_Todo() {
+func (as *ActionSuite) Test_List_All_Todoes() {
 
-	todo := []models.Todo{
-		{
-			Title: "Washing the dog",
-			ID:    uuid.Must(uuid.NewV4()),
-		},
-		{
-			Title: "Writing a book",
-			ID:    uuid.Must(uuid.NewV4()),
-		},
-	}
-
-	for _, t := range todo {
-		err := as.DB.Create(&t)
-		as.NoError(err)
-	}
+	// -------- Logged out... -------- //
 
 	res := as.HTML("/").Get()
 	body := res.Body.String()
 
-	for _, t := range todo {
+	as.Contains(body, `<div class="text-center wwc-mb-50">Welcome! Please log-in or register to continue</div>`)
+	as.Equal(200, res.Code)
+
+	// -------- Logged in... -------- //
+
+	as.LoadFixture("sample user and todoes")
+
+	user := &models.User{}
+	as.NoError(as.DB.First(user))
+	as.Session.Set("current_user_id", user.ID)
+
+	todo := &[]models.Todo{}
+	as.NoError(as.DB.All(todo))
+
+	res = as.HTML("/").Get()
+	body = res.Body.String()
+
+	for _, t := range *todo {
 		as.Contains(body, fmt.Sprintf(`<a href="/show/%s/" class="wwc-task-title">%s</a>`, t.ID.String(), t.Title))
+		as.Equal(t.UserID, user.ID)
 	}
 
 	as.Equal(200, res.Code)
 
 }
 
-func (as *ActionSuite) Test_Filtered_List_Todo() { // ?status=complete
+func (as *ActionSuite) Test_Filtered_List_Todoes() { // ?status=complete
 
-	todo := []models.Todo{
-		{
-			Title:     "Washing the dog",
-			ID:        uuid.Must(uuid.NewV4()),
-			Completed: true,
-		},
-		{
-			Title:     "Writing an essay",
-			ID:        uuid.Must(uuid.NewV4()),
-			Completed: true,
-		},
-		{
-			Title:     "Writing a book",
-			ID:        uuid.Must(uuid.NewV4()),
-			Completed: false,
-		},
-		{
-			Title:     "Washing the cat",
-			Completed: false,
-		},
-	}
+	// -------- Logged out... -------- //
 
-	for _, t := range todo {
-		err := as.DB.Create(&t)
-		as.NoError(err)
-	}
-
-	res := as.HTML("/?status=completed").Get()
+	res := as.HTML("/?status=complete").Get()
 	body := res.Body.String()
 
-	for _, t := range todo {
+	as.Contains(body, `<div class="text-center wwc-mb-50">Welcome! Please log-in or register to continue</div>`)
+	as.Equal(200, res.Code)
+
+	// -------- Logged in... -------- //
+
+	as.LoadFixture("sample user and todoes")
+
+	user := &models.User{}
+	as.NoError(as.DB.First(user))
+	as.Session.Set("current_user_id", user.ID)
+
+	todo := &[]models.Todo{}
+	as.NoError(as.DB.All(todo))
+
+	res = as.HTML("/?status=completed").Get()
+	body = res.Body.String()
+
+	for _, t := range *todo {
 
 		if t.Completed == true {
 			as.Contains(body, t.Title)
@@ -126,6 +124,8 @@ func (as *ActionSuite) Test_Filtered_List_Todo() { // ?status=complete
 			as.NotContains(body, t.ID.String())
 		}
 
+		as.Equal(t.UserID, user.ID)
+
 	}
 
 	as.Equal(200, res.Code)
@@ -134,8 +134,25 @@ func (as *ActionSuite) Test_Filtered_List_Todo() { // ?status=complete
 
 func (as *ActionSuite) Test_New_Todo() {
 
+	// -------- Logged out... -------- //
+
 	res := as.HTML("/new").Get()
 	body := res.Body.String()
+
+	as.Contains(body, `<a href="/">Found</a>`) // From buffalo, this indicates redirection
+	as.Equal(302, res.Code)
+	as.Equal("/", res.Location())
+
+	// -------- Logged in... -------- //
+
+	as.LoadFixture("sample user")
+
+	user := &models.User{}
+	as.NoError(as.DB.First(user))
+	as.Session.Set("current_user_id", user.ID)
+
+	res = as.HTML("/new").Get()
+	body = res.Body.String()
 
 	as.Contains(body, "New Task")
 
@@ -150,12 +167,36 @@ func (as *ActionSuite) Test_New_Todo() {
 
 func (as *ActionSuite) Test_Success_Create_Todo() {
 
-	todo := &models.Todo{
-		Title:       "Hello World!",
-		Description: "I am having success!",
-	}
+	// -------- Logged out... -------- //
+
+	todo := &models.Todo{}
 
 	res := as.HTML("/create").Post(todo)
+	body := res.Body.String()
+
+	as.Contains(body, "") // From buffalo, this indicates redirection for Post Request
+	as.Equal(302, res.Code)
+	as.Equal("/", res.Location())
+
+	// -------- Logged in... -------- //
+
+	as.LoadFixture("sample user")
+
+	user := &models.User{}
+	as.NoError(as.DB.First(user))
+	as.Session.Set("current_user_id", user.ID)
+
+	todo = &models.Todo{
+		Title:       "Hello World!",
+		Description: "I am having success!",
+		UserID:      user.ID,
+		Completed:   false,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		Deadline:    time.Now(),
+	}
+
+	res = as.HTML("/create").Post(todo)
 
 	err := as.DB.First(todo)
 	as.NoError(err)
@@ -163,6 +204,8 @@ func (as *ActionSuite) Test_Success_Create_Todo() {
 	as.NotZero(todo.CreatedAt)
 	as.Equal("Hello World!", todo.Title)
 	as.Equal("I am having success!", todo.Description)
+	as.Equal(todo.UserID, user.ID)
+	as.Equal(todo.Completed, false)
 
 	as.Equal(301, res.Code)
 	as.Equal(fmt.Sprintf("/show/%s", todo.ID), res.Location())
@@ -171,31 +214,58 @@ func (as *ActionSuite) Test_Success_Create_Todo() {
 
 func (as *ActionSuite) Test_Failed_Create_Todo() {
 
+	// -------- Logged out... -------- //
+
 	todo := &models.Todo{}
 
 	res := as.HTML("/create").Post(todo)
 
-	err := as.DB.First(todo)
-	as.Error(err)
+	as.Equal(302, res.Code)
+	as.Equal("/", res.Location())
+
+	// -------- Logged in... -------- //
+
+	as.LoadFixture("sample user")
+
+	user := &models.User{}
+	as.NoError(as.DB.First(user))
+	as.Session.Set("current_user_id", user.ID)
+
+	todo = &models.Todo{}
+
+	res = as.HTML("/create").Post(todo)
+
+	as.Error(as.DB.First(todo)) // Cannot create record, then error is expected
 	as.Equal(422, res.Code)
 
 }
 
 func (as *ActionSuite) Test_Delete_Todo() {
 
-	todo := &models.Todo{
-		ID:          uuid.Must(uuid.NewV4()),
-		Title:       "I'm being deleted",
-		Description: "Some deleteable description",
-	}
+	// -------- Logged out... -------- //
+
+	res := as.HTML("/delete").Delete()
+	as.Equal(404, res.Code)
+
+	// -------- Logged in... -------- //
+
+	as.LoadFixture("sample user and todoes")
+
+	user := &models.User{}
+	as.NoError(as.DB.First(user))
+	as.Session.Set("current_user_id", user.ID)
+
+	todo := &models.Todo{}
+
+	as.NoError(as.DB.First(todo))
+
+	as.Equal(todo.UserID, user.ID)
 
 	as.Session.Set("filterStatus", "") // Necessary for redirection inside the handler
 
-	err := as.DB.Create(todo)
-	as.NoError(err)
+	res = as.HTML(fmt.Sprintf("/delete/%s", todo.ID.String())).Delete()
 
-	res := as.HTML(fmt.Sprintf("/delete/%s", todo.ID.String())).Delete()
-
+	as.Error(as.DB.Find(todo, todo.ID)) // Won't find the record, then error
 	as.Equal(301, res.Code)
 	as.Equal("/", res.Location())
 
@@ -203,33 +273,44 @@ func (as *ActionSuite) Test_Delete_Todo() {
 
 func (as *ActionSuite) Test_Change_Status_Todo() {
 
-	todo := &models.Todo{
-		ID:    uuid.Must(uuid.NewV4()),
-		Title: "I'm being completed",
-	}
+	// -------- Logged out... -------- //
 
+	todo := &models.Todo{}
+
+	res := as.JSON("/change_status").Patch(todo)
+	as.Equal(404, res.Code)
+
+	// -------- Logged in... -------- //
+
+	as.LoadFixture("sample user and todoes")
+
+	user := &models.User{}
+	as.NoError(as.DB.First(user))
+	as.Session.Set("current_user_id", user.ID)
 	as.Session.Set("filterStatus", "") // Necessary for redirection inside the handler
 
-	err := as.DB.Create(todo)
-	as.NoError(err)
+	// ------ Check when updates from false to true ------ //
 
-	// Check when updates from false to true
+	as.NoError(as.DB.Where("completed = ?", false).First(todo))
+	todoID := todo.ID
+	as.Equal(todo.UserID, user.ID)
 
-	res := as.JSON(fmt.Sprintf("/change_status/%s", todo.ID.String())).Patch(todo)
+	res = as.JSON(fmt.Sprintf("/change_status/%s", todo.ID.String())).Patch(todo)
 
-	err = as.DB.First(todo)
-	as.NoError(err)
+	// After update, reload todo's data...
+	as.NoError(as.DB.Find(todo, todoID))
 
 	as.Equal(301, res.Code)
 	as.Equal("/", res.Location())
 	as.Equal(true, todo.Completed)
 
-	// Check when updates from true to false
+	// ------ Check when updates from true to false ------ //
 
 	res = as.JSON(fmt.Sprintf("/change_status/%s", todo.ID.String())).Patch(todo)
 
-	err = as.DB.First(todo)
-	as.NoError(err)
+	// After update, reload todo's data...
+	as.NoError(as.DB.Find(todo, todoID))
+	as.Equal(todo.UserID, user.ID)
 
 	as.Equal(301, res.Code)
 	as.Equal("/", res.Location())
@@ -239,18 +320,30 @@ func (as *ActionSuite) Test_Change_Status_Todo() {
 
 func (as *ActionSuite) Test_Show_Todo() {
 
-	todo := &models.Todo{
-		ID:          uuid.Must(uuid.NewV4()),
-		Title:       "I am being showed up!",
-		Description: "A description to be showed up!",
-		Completed:   false,
-	}
+	// -------- Logged out... -------- //
 
-	err := as.DB.Create(todo)
-	as.NoError(err)
+	todo := &models.Todo{}
 
-	res := as.HTML(fmt.Sprintf("/show/%s", todo.ID.String())).Get()
+	res := as.HTML("/show/samplestring").Get()
 	body := res.Body.String()
+
+	as.Contains(body, `<a href="/">Found</a>`) // From buffalo, this indicates redirection
+	as.Equal(302, res.Code)
+	as.Equal("/", res.Location())
+
+	// -------- Logged in... -------- //
+
+	as.LoadFixture("sample user and todoes")
+
+	user := &models.User{}
+	as.NoError(as.DB.First(user))
+	as.Session.Set("current_user_id", user.ID)
+
+	as.NoError(as.DB.Where("completed = ?", false).First(todo))
+	as.Equal(todo.UserID, user.ID)
+
+	res = as.HTML(fmt.Sprintf("/show/%s", todo.ID.String())).Get()
+	body = res.Body.String()
 
 	as.Contains(body, fmt.Sprintf(`<p><strong>Title:</strong>&nbsp;%s</p>`, todo.Title))
 	as.Contains(body, fmt.Sprintf(`<p><strong>Description:</strong>&nbsp;%s</p>`, todo.Description))
@@ -261,25 +354,30 @@ func (as *ActionSuite) Test_Show_Todo() {
 
 func (as *ActionSuite) Test_Edit_Todo() {
 
-	layout := "2006/01/02"
-	timeString := "2019/02/02"
-	timeParsed, err := time.Parse(layout, timeString)
+	// -------- Logged out... -------- //
 
-	as.NoError(err)
+	todo := &models.Todo{}
 
-	todo := &models.Todo{
-		Title:       "I will edit this task",
-		Description: "I will edit this description",
-		Deadline:    timeParsed,
-		Completed:   false,
-	}
-
-	err = as.DB.Create(todo)
-
-	as.NoError(err)
-
-	res := as.HTML(fmt.Sprintf("/edit/%s", todo.ID)).Get()
+	res := as.HTML("/edit/samplestring").Get()
 	body := res.Body.String()
+
+	as.Contains(body, `<a href="/">Found</a>`) // From buffalo, this indicates redirection
+	as.Equal(302, res.Code)
+	as.Equal("/", res.Location())
+
+	// -------- Logged in... -------- //
+
+	as.LoadFixture("sample user and todoes")
+
+	user := &models.User{}
+	as.NoError(as.DB.First(user))
+	as.Session.Set("current_user_id", user.ID)
+
+	as.NoError(as.DB.First(todo))
+	as.Equal(todo.UserID, user.ID)
+
+	res = as.HTML(fmt.Sprintf("/edit/%s", todo.ID)).Get()
+	body = res.Body.String()
 
 	as.Contains(body, fmt.Sprintf(`<input class=" form-control" id="todo-Title" name="Title" type="text" value="%s" />`, todo.Title))
 	as.Contains(body, fmt.Sprintf(`<textarea class=" form-control" id="todo-Description" name="Description" rows="4">%s</textarea>`, todo.Description))
@@ -290,51 +388,48 @@ func (as *ActionSuite) Test_Edit_Todo() {
 
 func (as *ActionSuite) Test_Success_Update_Todo() {
 
-	id := uuid.Must(uuid.NewV4())
+	// -------- Logged out... -------- //
 
-	// Initial todo, create record in the db
+	todo := &models.Todo{}
+
+	res := as.HTML("/update/samplestring").Put(todo)
+	as.Equal(404, res.Code)
+
+	// -------- Logged in... -------- //
+
+	as.LoadFixture("sample user and todoes")
+
+	user := &models.User{}
+	as.NoError(as.DB.First(user))
+	as.Session.Set("current_user_id", user.ID)
+
+	as.NoError(as.DB.First(todo))
+	todoID := todo.ID
+	as.Equal(todo.UserID, user.ID)
+
+	// todo - updated struct
 
 	layout := "2006/01/02"
-	timeString := "2019/02/02"
+	timeString := "2019/03/03"
 	timeParsed, err := time.Parse(layout, timeString)
 
 	as.NoError(err)
 
-	todo := &models.Todo{
-		ID:          id,
-		Title:       "I will edit this task",
-		Description: "I will edit this description",
-		Deadline:    timeParsed,
-		Completed:   false,
-	}
-
-	err = as.DB.Create(todo)
-
-	as.NoError(err)
-
-	// todo - updated struct
-
-	layout = "2006/01/02"
-	timeString = "2019/03/03"
-	timeParsed, err = time.Parse(layout, timeString)
-
-	as.NoError(err)
-
 	todo = &models.Todo{
-		ID:          id,
+		ID:          todo.ID,
+		UserID:      user.ID,
 		Title:       "Title Updated",
 		Description: "Description Updated",
 		Deadline:    timeParsed,
-		Completed:   false,
 	}
 
 	// Send the request with updated todo
 
-	res := as.HTML("/update").Put(todo)
+	res = as.HTML("/update").Put(todo)
 
 	// Verification
 
-	as.DB.Find(todo, id)
+	as.NoError(as.DB.Find(todo, todoID))
 
 	as.Equal("Title Updated", todo.Title)
 	as.Equal("Description Updated", todo.Description)
@@ -346,9 +441,25 @@ func (as *ActionSuite) Test_Success_Update_Todo() {
 
 func (as *ActionSuite) Test_Failed_Update_Todo() {
 
-	id := uuid.Must(uuid.NewV4())
+	// -------- Logged out... -------- //
 
-	// Initial todo, create record in the db
+	todo := &models.Todo{}
+
+	res := as.HTML("/update/samplestring").Put(todo)
+	as.Equal(404, res.Code)
+
+	// -------- Logged in... -------- //
+
+	as.LoadFixture("sample user and todoes")
+
+	user := &models.User{}
+	as.NoError(as.DB.First(user))
+	as.Session.Set("current_user_id", user.ID)
+
+	as.NoError(as.DB.First(todo))
+	as.Equal(todo.UserID, user.ID)
+
+	// todo - updated struct
 
 	layout := "2006/01/02"
 	timeString := "2019/02/02"
@@ -356,36 +467,16 @@ func (as *ActionSuite) Test_Failed_Update_Todo() {
 
 	as.NoError(err)
 
-	todo := &models.Todo{
-		ID:          id,
-		Title:       "I will edit this task",
-		Description: "I will edit this description",
-		Deadline:    timeParsed,
-		Completed:   false,
-	}
-
-	err = as.DB.Create(todo)
-
-	as.NoError(err)
-
-	// Invalid todo - updated struct with NO title
-
-	layout = "2006/01/02"
-	timeString = "2019/03/03"
-	timeParsed, err = time.Parse(layout, timeString)
-
-	as.NoError(err)
-
 	todo = &models.Todo{
-		ID:          id,
+		ID:          todo.ID,
+		UserID:      user.ID,
 		Description: "Description Updated",
 		Deadline:    timeParsed,
-		Completed:   false,
 	}
 
 	// Send the request with invalid-updated todo
 
-	res := as.HTML("/update").Put(todo)
+	res = as.HTML("/update").Put(todo)
 
 	as.Equal(422, res.Code)
 

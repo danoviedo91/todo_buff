@@ -1,11 +1,10 @@
-package models
+package models_test
 
 import (
 	"time"
-)
 
-// func Test_Todo(t *testing.T) {
-// }
+	"github.com/danoviedo91/todo/models"
+)
 
 func (ms *ModelSuite) Test_Todo_Methods() {
 
@@ -15,7 +14,7 @@ func (ms *ModelSuite) Test_Todo_Methods() {
 
 	ms.NoError(err)
 
-	todo := Todo{
+	todo := models.Todo{
 		Deadline: timeParsed,
 	}
 

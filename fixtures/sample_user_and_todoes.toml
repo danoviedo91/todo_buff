@@ -1,0 +1,57 @@
+[[scenario]]
+name = "sample user and todoes"
+
+    [[scenario.table]]
+        name = "users"
+
+    [[scenario.table.row]]
+        id = "<%= uuidNamed("userid") %>"
+        created_at = "<%= now() %>"
+        updated_at = "<%= now() %>"
+        first_name = "Daniel"
+        last_name = "Oviedo"
+        email = "doviedo@wawand.co"
+        password_hash = "<%= hash("doviedo") %>"
+
+    [[scenario.table]]
+        name = "todoes"
+
+    [[scenario.table.row]]
+        id = "<%= uuid() %>"
+        user_id = "<%= uuidNamed("userid") %>"
+        created_at = "<%= now() %>"
+        updated_at = "<%= now() %>"
+        title = "Wash the dog"
+        description = "Grab a hose and start throwing out water to your dog"
+        deadline = "<%= now() %>"
+        completed = false
+
+    [[scenario.table.row]]
+        id = "<%= uuid() %>"
+        user_id = "<%= uuidNamed("userid") %>"
+        created_at = "<%= now() %>"
+        updated_at = "<%= now() %>"
+        title = "Wash the dishes"
+        description = "Buy sponge, buy soap, start washing!"
+        deadline = "<%= now() %>"
+        completed = false
+
+    [[scenario.table.row]]
+        id = "<%= uuid() %>"
+        user_id = "<%= uuidNamed("userid") %>"
+        created_at = "<%= now() %>"
+        updated_at = "<%= now() %>"
+        title = "Do the homework"
+        description = "You are good at math, so go ahead boy"
+        deadline = "<%= now() %>"
+        completed = true
+
+    [[scenario.table.row]]
+        id = "<%= uuid() %>"
+        user_id = "<%= uuidNamed("userid") %>"
+        created_at = "<%= now() %>"
+        updated_at = "<%= now() %>"
+        title = "Write a poem"
+        description = "Inspire then write out sweetly boy"
+        deadline = "<%= now() %>"
+        completed = true
