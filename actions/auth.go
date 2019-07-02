@@ -2,6 +2,7 @@ package actions
 
 import (
 	"database/sql"
+	"log"
 	"strings"
 
 	"github.com/danoviedo91/todo_buff/models"
@@ -14,6 +15,13 @@ import (
 
 // AuthNew loads the signin page
 func AuthNew(c buffalo.Context) error {
+
+	if uid := c.Session().Get("current_user_id"); uid != nil {
+		if err := c.Redirect(301, "/"); err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	c.Set("user", models.User{})
 	return c.Render(200, r.HTML("auth/new.html"))
 }
@@ -36,7 +44,7 @@ func AuthCreate(c buffalo.Context) error {
 		verrs := validate.NewErrors()
 		verrs.Add("email", "invalid email/password")
 		c.Set("errors", verrs)
-		return c.Render(422, r.HTML("auth/new.html"))
+		return c.Render(422, r.HTML("index.html"))
 	}
 
 	if err != nil {

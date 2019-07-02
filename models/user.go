@@ -88,6 +88,10 @@ func (u *User) ValidateCreate(tx *pop.Connection) (*validate.Errors, error) {
 	var err error
 	return validate.Validate(
 		&validators.StringIsPresent{Field: u.Password, Name: "Password"},
+		&validators.RegexMatch{Field: u.Password, Name: "Password", Expr: "[^A-Za-z0-9]", Message: "Password must contain at least one special character"},
+		&validators.RegexMatch{Field: u.Password, Name: "Password", Expr: ".*[A-Z].*", Message: "Password must contain at least one uppercase letter"},
+		&validators.RegexMatch{Field: u.Password, Name: "Password", Expr: ".*[a-z].*", Message: "Password must contain at least one lowercase letter"},
+		&validators.StringLengthInRange{Field: u.Password, Name: "Password", Min: 8, Message: "Password must be at least 8 characters long"},
 		&validators.StringsMatch{Name: "Password", Field: u.Password, Field2: u.PasswordConfirmation, Message: "Password does not match confirmation"},
 	), err
 }

@@ -18,6 +18,10 @@ a:hover {
     1.  HELPER CLASSES
 */
 
+.min-vh-100 {
+    min-height: 100vh;
+}
+
 .wwc-txt-green {
     color: green !important;
 }
@@ -30,12 +34,25 @@ a:hover {
     box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
 }
 
+.wwc-mb-20 {
+    margin-bottom: 20px;
+}
+
 .wwc-mb-50 {
     margin-bottom: 50px;
 }
 
 .wwc-mr-20 {
     margin-right: 20px;
+}
+
+.wwc-ml-30 {
+    margin-left: 30px;
+}
+
+.wwc-my-0 {
+    margin-top: 0px !important;
+    margin-bottom: 0px !important;
 }
 
 .wwc-mx-32 {
@@ -51,8 +68,28 @@ a:hover {
     font-size: 28px;
 }
 
+.wwc-fsize-links {
+    font-size: 0.85em;
+}
+
 .wwc-text-gray {
     color: gray;
+}
+
+.wwc-txt-cyan {
+    color: #72c0db;
+}
+
+.wwc-txt-cyan:hover {
+    color: #72c0db;
+}
+
+.wwc-vertical-center {
+    position: absolute;
+    transform: translate(50%, -50%);
+    top: 50%;
+    right: 50%;
+    margin: 0 !important;
 }
 
 /* 
@@ -300,3 +337,30 @@ a:hover {
     padding: 10px 40px;
     color: white;
 }
+
+.wwc-entry-form {
+    padding: 35px 35px;
+}
+
+.invalid-feedback:not(:first-of-type) {
+    //display: none !important;
+}
+
+.auth-wrapper{
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-wrapper .sign-form{
+    max-width: 350px;
+    width: 100%;
+    padding: 0 20px;
+}
+
+.wwc-form-signin {
+    min-height: 605px;
+}
+
+.auth-wrapper h1{margin-bottom: 20px;}

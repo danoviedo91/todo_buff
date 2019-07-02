@@ -1,16 +1,27 @@
 package actions
 
 import (
+	"log"
+
 	"github.com/danoviedo91/todo_buff/models"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/pop"
 	"github.com/pkg/errors"
 )
 
+// UsersNew ...
 func UsersNew(c buffalo.Context) error {
+
+	if uid := c.Session().Get("current_user_id"); uid != nil {
+		if err := c.Redirect(301, "/"); err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	u := models.User{}
 	c.Set("user", u)
 	return c.Render(200, r.HTML("users/new.html"))
+
 }
 
 // UsersCreate registers a new user with the application.
@@ -27,6 +38,7 @@ func UsersCreate(c buffalo.Context) error {
 	}
 
 	if verrs.HasAny() {
+		log.Println(verrs.Errors)
 		c.Set("user", u)
 		c.Set("errors", verrs)
 		return c.Render(200, r.HTML("users/new.html"))

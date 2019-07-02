@@ -22,6 +22,7 @@ func List(c buffalo.Context) error {
 	todo := []models.Todo{}
 
 	if c.Session().Get("current_user_id") == nil {
+		c.Set("user", models.User{})
 		return c.Render(200, r.HTML("index.html"))
 	}
 
