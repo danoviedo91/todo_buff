@@ -21,6 +21,8 @@ type Todo struct {
 	Description string    `json:"description" db:"description"`
 	Deadline    time.Time `json:"deadline" db:"deadline"`
 	Completed   bool      `json:"completed" db:"completed"`
+
+	User User `belongs_to:"user" json:"-" db:"-"`
 }
 
 // String is not required by pop and may be deleted

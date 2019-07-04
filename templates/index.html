@@ -1,19 +1,38 @@
 <%= if (current_user) { %>
 
 <div class="d-flex justify-content-end wwc-mx-32">
-  <div class="my-auto wwc-ml-30">
+  <div class="my-auto mr-auto wwc-ml-30">
       <span>Logged in as <%= current_user.FirstName %>&nbsp;<%= current_user.LastName %></span>
   </div>
-  <a class="btn wwc-add-task-btn text-white" href="<%= newPath() %>">Add Task</a>
+  <%= if (isAdmin) { %>
+    <a class="btn wwc-add-task-btn text-white wwc-mr-20" href="<%= newUsersPath() %>">Create User</a>
+    <a class="btn wwc-add-task-btn text-white" href="<%= newPath() %>">Add Task</a>
+  <% } %>
+  <%= if (!isAdmin) { %>
+    <a class="btn wwc-add-task-btn text-white" href="<%= newPath() %>">Add Task</a>
+  <% } %>
+  
 </div>
+
+<%# --- cellWidthClass is Used for column widths in the table --- %>
+<% if (isAdmin) {
+  let cellWidthClass = "wwc-task-date-and-actions-admin"
+  let spanDefaultMsg = 4
+} else {
+  let cellWidthClass = "wwc-task-date-and-actions-regular"
+  let spanDefaultMsg = 3
+} %>
 
 <div class="wwc-tasks-container">
   <table class="table table-borderless" id="wwc-task-table">
     <thead class="thead-dark">
       <tr>
         <th class="wwc-task-name wwc-thead-first-element">Task</th>
-        <th class="wwc-task-date-and-actions">Complete by</th>
-        <th class="wwc-task-date-and-actions">Actions</th>
+        <%= if (isAdmin) { %>
+          <th class="wwc-task-owner">Owned by</th>  
+        <% } %>
+        <th class="<%= cellWidthClass %>">Complete by</th>
+        <th class="<%= cellWidthClass %>">Actions</th>
       </tr>
     </thead>
 
@@ -21,7 +40,7 @@
 
     <tbody>
       <tr>
-        <td colspan="3" id="wwc-notasks-msg"><%= defaultMsg %></td>
+        <td colspan="<%= spanDefaultMsg %>" id="wwc-notasks-msg"><%= defaultMsg %></td>
       </tr>
     </tbody>
 
@@ -61,10 +80,28 @@
 
         </td>
 
-        <td class="wwc-task-date-and-actions"><%= task.Deadline.Day() %> <%= task.Deadline.Month() %>
+        <%= if (isAdmin) { %>
+
+          <%= for (user) in users { %>
+            <%= if (user.ID.String() == task.UserID.String()) { %>
+
+              <%= if (user.IsAdmin) { %>
+                <td class="wwc-task-owner"><span class="align-middle"><%= user.FirstName %>&nbsp;<%= user.LastName %>&nbsp;</span><span class="badge badge-secondary wwc-bg-darbklue">admin</span></td>  
+              <% } %>
+
+              <%= if (!user.IsAdmin) { %>
+                <td class="wwc-task-owner"><%= user.FirstName %>&nbsp;<%= user.LastName %></td>
+              <% } %>
+
+            <% } %>
+          <% } %>
+
+        <% } %>
+
+        <td class="<%= cellWidthClass %>"><%= task.Deadline.Day() %> <%= task.Deadline.Month() %>
           <%= task.Deadline.Year() %></td>
 
-        <td class="wwc-task-date-and-actions">
+        <td class="<%= cellWidthClass %>">
           <a href="<%= editPath({todo_id: task.ID}) %>" class="wwc-edit-item"><i class="fas fa-pencil-alt"></i></a>
           <a class="js-wwc-trash-btn" href="<%= deletePath({todo_id: task.ID}) %>" data-method="DELETE"
             data-confirm="Are you sure?"><i class="far fa-trash-alt"></i></a>
@@ -87,7 +124,6 @@
           <%= f.InputTag("Email") %>
           <%= f.InputTag("Password", {type: "password", style: "margin-bottom: 30px;"}) %>
           <div class="d-flex justify-content-end align-items-center">
-            <a class="mr-auto wwc-txt-cyan wwc-fsize-links" href="users/new">I don't have an account</a>
             <button class="btn wwc-bg-cyan text-white">Sign In!</button>
           </div>
         <% } %>

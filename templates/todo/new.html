@@ -8,10 +8,10 @@
 
         <%= f.TextArea("Description", {rows: 4}) %>
         
-        <div class="form-group wwc-hidden">
-            <input name="Completed" type="text" class="form-control" id="todo-completed"
-                aria-describedby="emailHelp" value=false>
-        </div>
+        <%= if (isAdmin) { %>
+            <%= f.SelectTag("UserID", {label: "Assign To User", options: userOptions, value: userID}) %>
+        <% } %>
+
         <div class="d-flex justify-content-end">
             <%= if (session.Get("filterStatus") == "completed") { %>
             <a class="btn wwc-cancel-btn" href="/?status=completed">Cancel</a>
@@ -22,5 +22,5 @@
             <% } %>
             <input name="authenticity_token" type="hidden" value="<%= authenticity_token %>">
             <button type="submit" class="btn text-white wwc-create-task-btn">Create Task</button>
-				</div>   
+		</div>   
 <% } %>

@@ -5,15 +5,14 @@
 				<%= f.InputTag("Deadline", {type: "date", value: todoCurrentDate}) %>
 		</div>
 
-			<%= f.TextArea("Description", {rows: 4}) %>
-    
-    <div class="form-group wwc-hidden">
-        <input name="ID" type="text" class="form-control" id="todo-id" value="<%= todo.ID %>">
-    </div>
-    <div class="form-group wwc-hidden">
-        <input name="Completed" type="text" class="form-control" id="todo-completed"
-            value="<%= todo.Completed %>">
-    </div>
+        <%= f.TextArea("Description", {rows: 4}) %>
+        
+        <%= if (isAdmin) { %>
+            <%= f.SelectTag("UserID", {label: "Assign To User", options: userOptions }) %>
+        <% } %>
+
+        <%= f.InputTag("ID", {id: "todo_id", name: "todo_id", type: "hidden", value: todo.ID}) %>
+
     <div class="d-flex justify-content-end">
         <%= if (session.Get("filterStatus") == "completed") { %>
         <a class="btn wwc-cancel-btn" href="/?status=completed">Cancel</a>

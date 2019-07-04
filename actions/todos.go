@@ -3,56 +3,38 @@ package actions
 import (
 	"fmt"
 	"log"
-	"strconv"
 
 	"github.com/danoviedo91/todo_buff/models"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/pop"
-	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 )
 
 // List is used to parse index.html the first time user enters the website
 func List(c buffalo.Context) error {
 
-	// Connect to the database
+	// Render template immediately if not logged in...
 
-	tx := c.Value("tx").(*pop.Connection)
-
-	todo := []models.Todo{}
-
-	if c.Session().Get("current_user_id") == nil {
+	if c.Value("current_user") == nil {
 		c.Set("user", models.User{})
 		return c.Render(200, r.HTML("index.html"))
 	}
 
-	userID := c.Session().Get("current_user_id").(uuid.UUID).String()
+	isAdmin := c.Value("current_user").(*models.User).IsAdmin
 
-	if err := tx.Where("user_id = ?", userID).All(&todo); err != nil {
-		log.Fatal(err)
+	// Retrieve user's todos
+	tx := c.Value("tx").(*pop.Connection)
+	user := models.User{}
+
+	todo, err := user.GetTodoes(tx, c)
+
+	if err != nil {
+		return errors.WithStack(err)
 	}
 
 	// Assign values to variables...
 
-	if c.Param("status") == "completed" {
-
-		for i := 0; i < len(todo); i++ {
-			if todo[i].Completed != true {
-				todo = append(todo[:i], todo[i+1:]...)
-				i--
-			}
-		}
-
-	} else if c.Param("status") == "incompleted" {
-
-		for i := 0; i < len(todo); i++ {
-			if todo[i].Completed != false {
-				todo = append(todo[:i], todo[i+1:]...)
-				i--
-			}
-		}
-
-	}
+	getFilteredTodoes(&todo, c.Param("status"))
 
 	var defaultMsg string
 
@@ -60,18 +42,31 @@ func List(c buffalo.Context) error {
 
 		filterStatus := c.Session().Get("filterStatus").(string)
 
-		if filterStatus == "completed" {
+		switch filterStatus {
+
+		case "completed":
 			defaultMsg = "No completed tasks to show"
-		} else if filterStatus == "incompleted" {
+		case "incompleted":
 			defaultMsg = "No incompleted tasks to show"
-		} else {
+		default:
 			defaultMsg = "No tasks to show"
+
 		}
 
 	}
 
+	users := []models.User{}
+
+	if isAdmin {
+		if err := tx.All(&users); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+
 	// Prepare to send data to template
 
+	c.Set("users", users)
+	c.Set("isAdmin", isAdmin)
 	c.Set("todo", todo)
 	c.Set("mainViewFlag", true)
 	c.Set("defaultMsg", defaultMsg)
@@ -83,8 +78,27 @@ func List(c buffalo.Context) error {
 // NewTodo renders the todo/new.html which contains an empty form to create a todo
 func NewTodo(c buffalo.Context) error {
 
-	todo := models.Todo{}
+	tx := c.Value("tx").(*pop.Connection)
 
+	todo := models.Todo{}
+	users := []models.User{}
+	userOptions := make(map[string]string)
+	userID := c.Value("current_user").(*models.User).ID
+	isAdmin := c.Value("current_user").(*models.User).IsAdmin
+
+	if err := tx.All(&users); err != nil {
+		return errors.WithStack(err)
+	}
+
+	for _, user := range users {
+		optionValue := user.ID.String()
+		optionName := fmt.Sprintf("%v %v - %v", user.FirstName, user.LastName, user.Email)
+		userOptions[optionName] = optionValue
+	}
+
+	c.Set("isAdmin", isAdmin)
+	c.Set("userID", userID)
+	c.Set("userOptions", userOptions)
 	c.Set("todo", todo)
 
 	return c.Render(200, r.HTML("todo/new.html"))
@@ -101,7 +115,11 @@ func CreateTodo(c buffalo.Context) error {
 		return err
 	}
 
-	todo.UserID = c.Session().Get("current_user_id").(uuid.UUID)
+	if c.Param("UserID") == "" {
+		todo.UserID = c.Value("current_user").(*models.User).ID
+	}
+
+	todo.Completed = false
 
 	// Validation
 	verrs, err := todo.ValidateCreate(tx)
@@ -111,7 +129,26 @@ func CreateTodo(c buffalo.Context) error {
 	}
 
 	if verrs.HasAny() {
+
+		users := []models.User{}
+		userOptions := make(map[string]string)
+		userID := c.Value("current_user").(*models.User).ID
+		isAdmin := c.Value("current_user").(*models.User).IsAdmin
+
+		if err := tx.All(&users); err != nil {
+			return errors.WithStack(err)
+		}
+
+		for _, user := range users {
+			optionValue := user.ID.String()
+			optionName := fmt.Sprintf("%v %v - %v", user.FirstName, user.LastName, user.Email)
+			userOptions[optionName] = optionValue
+		}
+
 		c.Set("errors", verrs.Errors)
+		c.Set("isAdmin", isAdmin)
+		c.Set("userID", userID)
+		c.Set("userOptions", userOptions)
 		c.Set("todo", todo)
 
 		return c.Render(422, r.HTML("todo/new.html"))
@@ -134,21 +171,16 @@ func CreateTodo(c buffalo.Context) error {
 func DeleteTodo(c buffalo.Context) error {
 
 	tx := c.Value("tx").(*pop.Connection)
+	user := models.User{}
 
-	// Validate current user owns the todo....
+	todo, err := user.GetTodo(tx, c)
 
-	todo := models.Todo{}
-
-	userID := c.Session().Get("current_user_id").(uuid.UUID).String()
-
-	if err := tx.Where("user_id = ?", userID).Find(&todo, c.Param("todo_id")); err != nil {
-		return c.Error(404, errors.New(fmt.Sprintf("could not find todo with id = %v", c.Param("todo_id"))))
+	if err != nil {
+		return errors.WithStack(err)
 	}
 
-	// Delete...
-
 	if err := tx.Destroy(&todo); err != nil {
-		log.Fatal(err)
+		return errors.WithStack(err)
 	}
 
 	// Redirect to "/" with filter, if applies
@@ -201,17 +233,31 @@ func CompleteTodo(c buffalo.Context) error {
 func EditTodo(c buffalo.Context) error {
 
 	tx := c.Value("tx").(*pop.Connection)
+	user := models.User{}
+	users := []models.User{}
+	userOptions := make(map[string]string)
+	isAdmin := c.Value("current_user").(*models.User).IsAdmin
 
-	todo := models.Todo{}
+	todo, err := user.GetTodo(tx, c)
 
-	userID := c.Session().Get("current_user_id").(uuid.UUID).String()
-
-	if err := tx.Where("user_id = ?", userID).Find(&todo, c.Param("todo_id")); err != nil {
-		return c.Error(404, errors.New(fmt.Sprintf("could not find todo with id = %v", c.Param("todo_id"))))
+	if err := tx.All(&users); err != nil {
+		return errors.WithStack(err)
 	}
 
+	for _, user := range users {
+		optionValue := user.ID.String()
+		optionName := fmt.Sprintf("%v %v - %v", user.FirstName, user.LastName, user.Email)
+		userOptions[optionName] = optionValue
+	}
+
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	c.Set("isAdmin", isAdmin)
+	c.Set("userOptions", userOptions)
 	c.Set("todo", todo)
-	c.Set("todoCurrentDate", strconv.Itoa(todo.Deadline.Year())+"-"+todo.MonthFormatted()+"-"+todo.DayFormatted())
+	c.Set("todoCurrentDate", fmt.Sprintf("%v-%v-%v", todo.Deadline.Year(), todo.MonthFormatted(), todo.DayFormatted()))
 
 	return c.Render(200, r.HTML("todo/edit.html"))
 }
@@ -220,15 +266,12 @@ func EditTodo(c buffalo.Context) error {
 func UpdateTodo(c buffalo.Context) error {
 
 	tx := c.Value("tx").(*pop.Connection)
+	user := models.User{}
 
-	// Validate current user owns the todo....
+	todo, err := user.GetTodo(tx, c)
 
-	todo := models.Todo{}
-
-	userID := c.Session().Get("current_user_id").(uuid.UUID).String()
-
-	if err := tx.Where("user_id = ?", userID).Find(&todo, c.Param("ID")); err != nil {
-		return c.Error(404, errors.New(fmt.Sprintf("could not find todo with id = %v", c.Param("ID"))))
+	if err != nil {
+		return errors.WithStack(err)
 	}
 
 	// Then bind the form info to the struct...
@@ -237,7 +280,9 @@ func UpdateTodo(c buffalo.Context) error {
 		log.Fatal(err)
 	}
 
-	todo.UserID = c.Session().Get("current_user_id").(uuid.UUID)
+	if c.Param("UserID") == "" {
+		todo.UserID = c.Value("current_user").(*models.User).ID
+	}
 
 	// Validate non-empty title...
 	verrs, err := todo.ValidateUpdate(tx)
@@ -247,9 +292,29 @@ func UpdateTodo(c buffalo.Context) error {
 	}
 
 	if verrs.HasAny() {
+
+		users := []models.User{}
+		userOptions := make(map[string]string)
+		userID := c.Value("current_user").(*models.User).ID
+		isAdmin := c.Value("current_user").(*models.User).IsAdmin
+
+		if err := tx.All(&users); err != nil {
+			return errors.WithStack(err)
+		}
+
+		for _, user := range users {
+			optionValue := user.ID.String()
+			optionName := fmt.Sprintf("%v %v - %v", user.FirstName, user.LastName, user.Email)
+			userOptions[optionName] = optionValue
+		}
+
+		c.Set("isAdmin", isAdmin)
+		c.Set("userID", userID)
+		c.Set("userOptions", userOptions)
 		c.Set("errors", verrs.Errors)
 		c.Set("todo", todo)
-		c.Set("todoCurrentDate", strconv.Itoa(todo.Deadline.Year())+"-"+todo.MonthFormatted()+"-"+todo.DayFormatted())
+		c.Set("todoCurrentDate", fmt.Sprintf("%v-%v-%v", todo.Deadline.Year(), todo.MonthFormatted(), todo.DayFormatted()))
+
 		return c.Render(422, r.HTML("todo/edit.html"))
 
 	}
@@ -267,17 +332,43 @@ func UpdateTodo(c buffalo.Context) error {
 func ShowTodo(c buffalo.Context) error {
 
 	tx := c.Value("tx").(*pop.Connection)
+	user := models.User{}
 
-	todo := models.Todo{}
+	todo, err := user.GetTodo(tx, c)
 
-	userID := c.Session().Get("current_user_id").(uuid.UUID).String()
+	if err := tx.Find(&user, todo.UserID); err != nil {
+		return errors.WithStack(err)
+	}
 
-	if err := tx.Where("user_id = ?", userID).Find(&todo, c.Param("todo_id")); err != nil {
-		return c.Error(404, errors.New(fmt.Sprintf("could not find todo with id = %v", c.Param("todo_id"))))
+	if err != nil {
+		return errors.WithStack(err)
 	}
 
 	c.Set("todo", todo)
+	c.Set("owner", fmt.Sprintf("%v %v", user.FirstName, user.LastName))
 
 	return c.Render(200, r.HTML("todo/show.html"))
+
+}
+
+func getFilteredTodoes(todo *[]models.Todo, filterStatus string) {
+
+	if filterStatus == "completed" {
+		for i := 0; i < len(*todo); i++ {
+			if !(*todo)[i].Completed {
+				*todo = append((*todo)[:i], (*todo)[i+1:]...)
+				i--
+			}
+		}
+	}
+
+	if filterStatus == "incompleted" {
+		for i := 0; i < len(*todo); i++ {
+			if (*todo)[i].Completed {
+				*todo = append((*todo)[:i], (*todo)[i+1:]...)
+				i--
+			}
+		}
+	}
 
 }

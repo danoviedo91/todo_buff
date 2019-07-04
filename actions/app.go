@@ -59,9 +59,11 @@ func App() *buffalo.App {
 		// Setup and use translations:
 		app.Use(translations())
 
+		app.Use(SetCurrentUser)
+		app.Use(Authorize)
 		app.Use(middleware.HeaderInfo)
 
-		app.Middleware.Skip(middleware.HeaderInfo, UpdateTodo, CreateTodo, NewTodo, EditTodo, DeleteTodo, CompleteTodo)
+		app.Middleware.Skip(middleware.HeaderInfo, UpdateTodo, CreateTodo, NewTodo, EditTodo, DeleteTodo, CompleteTodo, UsersNew)
 		app.Middleware.Skip(Authorize, List, UsersNew, UsersCreate, AuthNew, AuthCreate)
 
 		app.GET("/", List)
@@ -73,8 +75,6 @@ func App() *buffalo.App {
 		app.GET("/show/{todo_id}", ShowTodo)
 		app.PATCH("/change_status/{todo_id}", CompleteTodo)
 
-		app.Use(SetCurrentUser)
-		app.Use(Authorize)
 		app.GET("/users/new", UsersNew)
 		app.POST("/users", UsersCreate)
 		// app.GET("/signin", AuthNew)

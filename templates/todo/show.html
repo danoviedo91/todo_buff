@@ -1,6 +1,7 @@
 <form method="POST" action="/update" class="wwc-form-wrapper shadow-sm">
     <h3 class="wwc-form-title">View Task</h3>
         <div class="wwc-fields-wrapper">
+            <p><strong>Owner:</strong>&nbsp;<%= owner %></p>
             <p><strong>Title:</strong>&nbsp;<%= todo.Title %></p>
             <p><strong>Description:</strong>&nbsp;<%= todo.Description %></p>
             <p><strong>Complete By:</strong>&nbsp;<%= todo.Deadline.Day() %> <%= todo.Deadline.Month() %> <%= todo.Deadline.Year() %></p>

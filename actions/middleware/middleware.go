@@ -4,7 +4,6 @@ import (
 	"github.com/danoviedo91/todo_buff/models"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/pop"
-	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 )
 
@@ -12,23 +11,35 @@ import (
 func HeaderInfo(next buffalo.Handler) buffalo.Handler {
 	return func(c buffalo.Context) error {
 
-		tx := c.Value("tx").(*pop.Connection)
 		var numberOfPendingTodoes int
+		var err error
 
-		if c.Session().Get("current_user_id") != nil {
+		tx := c.Value("tx").(*pop.Connection)
 
-			var err error
+		if c.Value("current_user") != nil {
 
-			userID := c.Session().Get("current_user_id").(uuid.UUID).String()
-			numberOfPendingTodoes, err = tx.Where("completed = ?", false).Where("user_id = ?", userID).Count(&models.Todo{})
+			userID := c.Value("current_user").(*models.User).ID
+			isAdmin := c.Value("current_user").(*models.User).IsAdmin
 
-			if err != nil {
-				return errors.WithStack(err)
+			if isAdmin {
+
+				numberOfPendingTodoes, err = tx.Where("completed = ?", false).Count(&models.Todo{})
+
+				if err != nil {
+					return errors.WithStack(err)
+				}
+
 			}
 
-		} else {
+			if !isAdmin {
 
-			numberOfPendingTodoes = 0
+				numberOfPendingTodoes, err = tx.Where("completed = ?", false).Where("user_id = ?", userID).Count(&models.Todo{})
+
+				if err != nil {
+					return errors.WithStack(err)
+				}
+
+			}
 
 		}
 

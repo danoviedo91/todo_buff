@@ -1,7 +1,7 @@
-<div class="wwc-form-wrapper shadow wwc-form-signin d-flex align-items-center wwc-my-0">
+<div class="wwc-form-wrapper shadow wwc-form-signin d-flex align-items-center">
   <div class="auth-wrapper w-100">
     <div class="sign-form">
-      <h1 class="text-center wwc-fsize-main">Register</h1>
+      <h1 class="text-center wwc-fsize-main">Create User</h1>
 
       <%= form_for(user, {action: usersPath()}) { %>
         <%= f.InputTag("FirstName") %>
@@ -11,7 +11,13 @@
         <%= f.InputTag("PasswordConfirmation", {type: "password", style: "margin-bottom: 30px;"}) %>
         
         <div class="d-flex justify-content-end">
+          <%= if (session.Get("filterStatus") == "completed") { %>
+          <a class="btn wwc-cancel-btn" href="/?status=completed">Cancel</a>
+          <% } else if (session.Get("filterStatus") == "incompleted") { %>
+          <a class="btn wwc-cancel-btn" href="/?status=incompleted">Cancel</a>
+          <% } else { %>
           <a class="btn wwc-cancel-btn" href="/">Cancel</a>
+          <% } %>
           <button class="btn wwc-bg-cyan text-white">Register!</button>
         </div>
       <% } %>

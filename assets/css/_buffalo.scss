@@ -43,7 +43,7 @@ a:hover {
 }
 
 .wwc-mr-20 {
-    margin-right: 20px;
+    margin-right: 20px !important;
 }
 
 .wwc-ml-30 {
@@ -62,6 +62,10 @@ a:hover {
 
 .wwc-bg-cyan {
     background-color: #72c0db;
+}
+
+.wwc-bg-darbklue {
+    background-color: #194767;
 }
 
 .wwc-fsize-main {
@@ -138,7 +142,7 @@ a:hover {
 
 .wwc-add-task-btn {
     display: inline-block;
-    margin: 16px 0px 16px auto;
+    margin: 16px 0px 16px 0;
     padding: 10px 40px;
     background-color: #72c0db !important;
 }
@@ -172,11 +176,17 @@ a:hover {
     border-radius: 30px;
 }
 
-.wwc-task-name {
-    width: 60%;
+.wwc-task-owner {
+    width: 24.5%;
+    line-height: 33.5px;
 }
 
-.wwc-task-date-and-actions {
+.wwc-task-date-and-actions-admin {
+    width: 13.33%;
+    line-height: 33.5px;
+}
+
+.wwc-task-date-and-actions-regular {
     width: 20%;
     line-height: 33.5px;
 }
@@ -251,21 +261,21 @@ a:hover {
     background-color: #72c0db;
 }
 
-.wwc-task-date-and-actions .fa-pencil-alt {
+.fa-pencil-alt {
     opacity: 0.4;
     color: #343a40;
 }
 
-.wwc-task-date-and-actions .fa-pencil-alt:hover {
+.fa-pencil-alt:hover {
     opacity: 1;
 }
 
-.wwc-task-date-and-actions .fa-trash-alt {
+.fa-trash-alt {
     opacity: 0.4;
     color: red;
 }
 
-.wwc-task-date-and-actions .fa-trash-alt:hover {
+.fa-trash-alt:hover {
     opacity: 1;
 }
 

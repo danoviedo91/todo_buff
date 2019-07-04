@@ -1,18 +1,25 @@
 package actions
 
 import (
+	"fmt"
 	"log"
+	"os"
+	"strings"
 
+	"github.com/danoviedo91/todo_buff/mailers"
 	"github.com/danoviedo91/todo_buff/models"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/pop"
+	"github.com/pkg/browser"
 	"github.com/pkg/errors"
+	"github.com/sendgrid/sendgrid-go"
+	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
 // UsersNew ...
 func UsersNew(c buffalo.Context) error {
 
-	if uid := c.Session().Get("current_user_id"); uid != nil {
+	if uid := c.Session().Get("current_user_id"); uid == nil {
 		if err := c.Redirect(301, "/"); err != nil {
 			log.Fatal(err)
 		}
@@ -27,25 +34,52 @@ func UsersNew(c buffalo.Context) error {
 // UsersCreate registers a new user with the application.
 func UsersCreate(c buffalo.Context) error {
 	u := &models.User{}
+
 	if err := c.Bind(u); err != nil {
 		return errors.WithStack(err)
 	}
 
 	tx := c.Value("tx").(*pop.Connection)
-	verrs, err := u.Create(tx)
+	// verrs, err := u.Create(tx)
+	// if err != nil {
+	// 	return errors.WithStack(err)
+	// }
+
+	// if verrs.HasAny() {
+	// 	log.Println(verrs.Errors)
+	// 	c.Set("user", u)
+	// 	c.Set("errors", verrs)
+	// 	return c.Render(200, r.HTML("users/new.html"))
+	// }
+
+	adminUserID := c.Value("current_user").(*models.User).ID.String()
+
+	emailBody, err := mailers.GenerateEmailHTMLBody(tx, u, adminUserID)
+
+	if err != nil {
+		errors.WithStack(err)
+	}
+
+	reader := strings.NewReader(emailBody)
+	browser.OpenReader(reader)
+
+	from := mail.NewEmail("Example User", "doviedo@wawand.co")
+	subject := "Sending with Twilio SendGrid is Fun"
+	to := mail.NewEmail("Example User", "doviedo@wawand.co")
+	plainTextContent := "and easy to do anywhere, even with Go"
+	htmlContent := "<strong>and easy to do anywhere, even with Go</strong>"
+	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
+	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
+	response, err := client.Send(message)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	if verrs.HasAny() {
-		log.Println(verrs.Errors)
-		c.Set("user", u)
-		c.Set("errors", verrs)
-		return c.Render(200, r.HTML("users/new.html"))
-	}
+	fmt.Println(response.StatusCode)
+	fmt.Println(response.Body)
+	fmt.Println(response.Headers)
 
-	c.Session().Set("current_user_id", u.ID)
-	c.Flash().Add("success", "Welcome to Buffalo!")
+	//c.Flash().Add("success", "Welcome to Buffalo!")
 
 	return c.Redirect(302, "/")
 }
