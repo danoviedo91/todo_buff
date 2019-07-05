@@ -63,8 +63,8 @@ func App() *buffalo.App {
 		app.Use(Authorize)
 		app.Use(middleware.HeaderInfo)
 
-		app.Middleware.Skip(middleware.HeaderInfo, UpdateTodo, CreateTodo, NewTodo, EditTodo, DeleteTodo, CompleteTodo, UsersNew)
-		app.Middleware.Skip(Authorize, List, UsersNew, UsersCreate, AuthNew, AuthCreate)
+		app.Middleware.Skip(middleware.HeaderInfo, UpdateTodo, CreateTodo, NewTodo, EditTodo, DeleteTodo, CompleteTodo, middleware.AuthorizeAdmin(UsersNew), ShowTodo)
+		app.Middleware.Skip(Authorize, AuthNew, AuthCreate)
 
 		app.GET("/", List)
 		app.GET("/new", NewTodo)
@@ -75,10 +75,12 @@ func App() *buffalo.App {
 		app.GET("/show/{todo_id}", ShowTodo)
 		app.PATCH("/change_status/{todo_id}", CompleteTodo)
 
-		app.GET("/users/new", UsersNew)
+		app.GET("/users/new", middleware.AuthorizeAdmin(UsersNew))
+		app.GET("/users/edit/{user_id}", UsersEdit)
+		app.GET("/users/update/", UsersUpdate)
 		app.POST("/users", UsersCreate)
-		// app.GET("/signin", AuthNew)
-		app.POST("/", AuthCreate)
+		app.GET("/signin", AuthNew)
+		app.POST("/signin", AuthCreate)
 		app.DELETE("/signout", AuthDestroy)
 		app.ServeFiles("/", assetsBox) // serve files from the public directory
 	}

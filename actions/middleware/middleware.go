@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"strconv"
+
 	"github.com/danoviedo91/todo_buff/models"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/pop"
@@ -43,9 +45,37 @@ func HeaderInfo(next buffalo.Handler) buffalo.Handler {
 
 		}
 
+		page := 1
+
+		if c.Param("page") != "" {
+			page, err = strconv.Atoi(c.Param("page"))
+			if err != nil {
+				errors.WithStack(err)
+			}
+		}
+
+		c.Session().Set("page", page)
 		c.Session().Set("filterStatus", c.Param("status"))
 		c.Session().Set("numberOfPendingTodoes", numberOfPendingTodoes)
 
 		return next(c)
+	}
+}
+
+// AuthorizeAdmin verifies the current user is admin or not, and if not, redirect to main dashboard
+func AuthorizeAdmin(next buffalo.Handler) buffalo.Handler {
+
+	return func(c buffalo.Context) error {
+
+		isAdmin := c.Value("current_user").(*models.User).IsAdmin
+
+		if !isAdmin {
+
+			return c.Redirect(301, "/")
+
+		}
+
+		return next(c)
+
 	}
 }

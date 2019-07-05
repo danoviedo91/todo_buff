@@ -1,9 +1,7 @@
 package actions
 
 import (
-	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/danoviedo91/todo_buff/mailers"
@@ -12,8 +10,7 @@ import (
 	"github.com/gobuffalo/pop"
 	"github.com/pkg/browser"
 	"github.com/pkg/errors"
-	"github.com/sendgrid/sendgrid-go"
-	"github.com/sendgrid/sendgrid-go/helpers/mail"
+	"github.com/sethvargo/go-password/password"
 )
 
 // UsersNew ...
@@ -27,6 +24,8 @@ func UsersNew(c buffalo.Context) error {
 
 	u := models.User{}
 	c.Set("user", u)
+	c.Set("context", c) // Used for HrefCancelBtn helper
+	log.Println(c.Session().Get("filterStatus"))
 	return c.Render(200, r.HTML("users/new.html"))
 
 }
@@ -39,18 +38,30 @@ func UsersCreate(c buffalo.Context) error {
 		return errors.WithStack(err)
 	}
 
-	tx := c.Value("tx").(*pop.Connection)
-	// verrs, err := u.Create(tx)
-	// if err != nil {
-	// 	return errors.WithStack(err)
-	// }
+	// Generate a password that is 12 characters long with 4 digits, 4 symbols,
+	// allowing upper and lower case letters, allowing repeat characters.
+	pwd, err := password.Generate(12, 4, 4, false, true)
 
-	// if verrs.HasAny() {
-	// 	log.Println(verrs.Errors)
-	// 	c.Set("user", u)
-	// 	c.Set("errors", verrs)
-	// 	return c.Render(200, r.HTML("users/new.html"))
-	// }
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	u.Password = pwd
+	u.PasswordConfirmation = u.Password
+
+	tx := c.Value("tx").(*pop.Connection)
+	verrs, err := u.Create(tx)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	if verrs.HasAny() {
+		log.Println(verrs.Errors)
+		c.Set("user", u)
+		c.Set("errors", verrs)
+		c.Set("context", c) // Used for HrefCancelBtn helper
+		return c.Render(200, r.HTML("users/new.html"))
+	}
 
 	adminUserID := c.Value("current_user").(*models.User).ID.String()
 
@@ -63,25 +74,33 @@ func UsersCreate(c buffalo.Context) error {
 	reader := strings.NewReader(emailBody)
 	browser.OpenReader(reader)
 
-	from := mail.NewEmail("Example User", "doviedo@wawand.co")
-	subject := "Sending with Twilio SendGrid is Fun"
-	to := mail.NewEmail("Example User", "doviedo@wawand.co")
-	plainTextContent := "and easy to do anywhere, even with Go"
-	htmlContent := "<strong>and easy to do anywhere, even with Go</strong>"
-	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
-	response, err := client.Send(message)
-	if err != nil {
-		return errors.WithStack(err)
-	}
+	// from := mail.NewEmail("Example User", "doviedo@wawand.co")
+	// subject := "Sending with Twilio SendGrid is Fun"
+	// to := mail.NewEmail("Example User", "doviedo@wawand.co")
+	// plainTextContent := "and easy to do anywhere, even with Go"
+	// htmlContent := "<strong>and easy to do anywhere, even with Go</strong>"
+	// message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
+	// client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
+	// response, err := client.Send(message)
+	// if err != nil {
+	// 	return errors.WithStack(err)
+	// }
 
-	fmt.Println(response.StatusCode)
-	fmt.Println(response.Body)
-	fmt.Println(response.Headers)
-
-	//c.Flash().Add("success", "Welcome to Buffalo!")
+	// fmt.Println(response.StatusCode)
+	// fmt.Println(response.Body)
+	// fmt.Println(response.Headers)
 
 	return c.Redirect(302, "/")
+}
+
+// UsersEdit ...
+func UsersEdit(c buffalo.Context) error {
+	return nil
+}
+
+// UsersUpdate ...
+func UsersUpdate(c buffalo.Context) error {
+	return nil
 }
 
 // SetCurrentUser attempts to find a user based on the current_user_id
@@ -113,7 +132,7 @@ func Authorize(next buffalo.Handler) buffalo.Handler {
 			}
 
 			c.Flash().Add("danger", "You must be authorized to see that page")
-			return c.Redirect(302, "/")
+			return c.Redirect(302, "/signin")
 		}
 		return next(c)
 	}

@@ -16,25 +16,19 @@ func List(c buffalo.Context) error {
 	// Render template immediately if not logged in...
 
 	if c.Value("current_user") == nil {
-		c.Set("user", models.User{})
-		return c.Render(200, r.HTML("index.html"))
+		return c.Redirect(301, "/signin")
 	}
 
 	isAdmin := c.Value("current_user").(*models.User).IsAdmin
 
 	// Retrieve user's todos
 	tx := c.Value("tx").(*pop.Connection)
-	user := models.User{}
 
-	todo, err := user.GetTodoes(tx, c)
+	q, todo, err := getTodoes(tx, c)
 
 	if err != nil {
 		return errors.WithStack(err)
 	}
-
-	// Assign values to variables...
-
-	getFilteredTodoes(&todo, c.Param("status"))
 
 	var defaultMsg string
 
@@ -65,10 +59,12 @@ func List(c buffalo.Context) error {
 
 	// Prepare to send data to template
 
+	c.Set("user_id", c.Session().Get("current_user_id"))
 	c.Set("users", users)
 	c.Set("isAdmin", isAdmin)
 	c.Set("todo", todo)
 	c.Set("mainViewFlag", true)
+	c.Set("pagination", q.Paginator)
 	c.Set("defaultMsg", defaultMsg)
 
 	return c.Render(200, r.HTML("index.html"))
@@ -82,6 +78,7 @@ func NewTodo(c buffalo.Context) error {
 
 	todo := models.Todo{}
 	users := []models.User{}
+	// userOptions, userID, isAdmin - used for the select tag inside the front end form
 	userOptions := make(map[string]string)
 	userID := c.Value("current_user").(*models.User).ID
 	isAdmin := c.Value("current_user").(*models.User).IsAdmin
@@ -96,10 +93,13 @@ func NewTodo(c buffalo.Context) error {
 		userOptions[optionName] = optionValue
 	}
 
+	// Setting context variables
+
 	c.Set("isAdmin", isAdmin)
 	c.Set("userID", userID)
 	c.Set("userOptions", userOptions)
 	c.Set("todo", todo)
+	c.Set("context", c) // Used for HrefCancelBtn helper
 
 	return c.Render(200, r.HTML("todo/new.html"))
 
@@ -150,6 +150,7 @@ func CreateTodo(c buffalo.Context) error {
 		c.Set("userID", userID)
 		c.Set("userOptions", userOptions)
 		c.Set("todo", todo)
+		c.Set("context", c) // Used for HrefCancelBtn helper
 
 		return c.Render(422, r.HTML("todo/new.html"))
 	}
@@ -171,9 +172,8 @@ func CreateTodo(c buffalo.Context) error {
 func DeleteTodo(c buffalo.Context) error {
 
 	tx := c.Value("tx").(*pop.Connection)
-	user := models.User{}
 
-	todo, err := user.GetTodo(tx, c)
+	todo, err := getTodo(tx, c)
 
 	if err != nil {
 		return errors.WithStack(err)
@@ -233,12 +233,11 @@ func CompleteTodo(c buffalo.Context) error {
 func EditTodo(c buffalo.Context) error {
 
 	tx := c.Value("tx").(*pop.Connection)
-	user := models.User{}
 	users := []models.User{}
 	userOptions := make(map[string]string)
 	isAdmin := c.Value("current_user").(*models.User).IsAdmin
 
-	todo, err := user.GetTodo(tx, c)
+	todo, err := getTodo(tx, c)
 
 	if err := tx.All(&users); err != nil {
 		return errors.WithStack(err)
@@ -258,6 +257,7 @@ func EditTodo(c buffalo.Context) error {
 	c.Set("userOptions", userOptions)
 	c.Set("todo", todo)
 	c.Set("todoCurrentDate", fmt.Sprintf("%v-%v-%v", todo.Deadline.Year(), todo.MonthFormatted(), todo.DayFormatted()))
+	c.Set("context", c) // Used for HrefCancelBtn helper
 
 	return c.Render(200, r.HTML("todo/edit.html"))
 }
@@ -266,9 +266,8 @@ func EditTodo(c buffalo.Context) error {
 func UpdateTodo(c buffalo.Context) error {
 
 	tx := c.Value("tx").(*pop.Connection)
-	user := models.User{}
 
-	todo, err := user.GetTodo(tx, c)
+	todo, err := getTodo(tx, c)
 
 	if err != nil {
 		return errors.WithStack(err)
@@ -313,6 +312,7 @@ func UpdateTodo(c buffalo.Context) error {
 		c.Set("userOptions", userOptions)
 		c.Set("errors", verrs.Errors)
 		c.Set("todo", todo)
+		c.Set("context", c) // Used for HrefCancelBtn helper
 		c.Set("todoCurrentDate", fmt.Sprintf("%v-%v-%v", todo.Deadline.Year(), todo.MonthFormatted(), todo.DayFormatted()))
 
 		return c.Render(422, r.HTML("todo/edit.html"))
@@ -334,7 +334,7 @@ func ShowTodo(c buffalo.Context) error {
 	tx := c.Value("tx").(*pop.Connection)
 	user := models.User{}
 
-	todo, err := user.GetTodo(tx, c)
+	todo, err := getTodo(tx, c)
 
 	if err := tx.Find(&user, todo.UserID); err != nil {
 		return errors.WithStack(err)
@@ -346,29 +346,89 @@ func ShowTodo(c buffalo.Context) error {
 
 	c.Set("todo", todo)
 	c.Set("owner", fmt.Sprintf("%v %v", user.FirstName, user.LastName))
+	c.Set("context", c) // Used for HrefCancelBtn helper
 
 	return c.Render(200, r.HTML("todo/show.html"))
 
 }
 
-func getFilteredTodoes(todo *[]models.Todo, filterStatus string) {
+// ============================ ----
+// ---- In-action helper functions...
+// ============================ ----
 
-	if filterStatus == "completed" {
-		for i := 0; i < len(*todo); i++ {
-			if !(*todo)[i].Completed {
-				*todo = append((*todo)[:i], (*todo)[i+1:]...)
-				i--
+func getTodoes(tx *pop.Connection, c buffalo.Context) (*pop.Query, []models.Todo, error) {
+
+	q := tx.PaginateFromParams(c.Params())
+	q.Paginator.PerPage = 5
+	q.Paginator.Offset = (q.Paginator.Page - 1) * q.Paginator.PerPage
+
+	todo := []models.Todo{}
+
+	userID := c.Value("current_user").(*models.User).ID
+	isAdmin := c.Value("current_user").(*models.User).IsAdmin
+
+	filter := c.Param("status")
+
+	if isAdmin {
+
+		switch filter {
+		case "completed":
+			if err := q.Where("completed = ?", true).All(&todo); err != nil {
+				return nil, nil, errors.WithStack(err)
 			}
+		case "incompleted":
+			if err := q.Where("completed = ?", false).All(&todo); err != nil {
+				return nil, nil, errors.WithStack(err)
+			}
+		default:
+			if err := q.All(&todo); err != nil {
+				return nil, nil, errors.WithStack(err)
+			}
+		}
+
+	}
+
+	if !isAdmin {
+
+		switch filter {
+		case "completed":
+			if err := q.Where("user_id = ?", userID).Where("completed = ?", true).All(&todo); err != nil {
+				return nil, nil, errors.WithStack(err)
+			}
+		case "incompleted":
+			if err := q.Where("user_id = ?", userID).Where("completed = ?", false).All(&todo); err != nil {
+				return nil, nil, errors.WithStack(err)
+			}
+		default:
+			if err := q.Where("user_id = ?", userID).All(&todo); err != nil {
+				return nil, nil, errors.WithStack(err)
+			}
+		}
+
+	}
+
+	return q, todo, nil
+
+}
+
+func getTodo(tx *pop.Connection, c buffalo.Context) (models.Todo, error) {
+
+	todo := models.Todo{}
+	userID := c.Value("current_user").(*models.User).ID
+	isAdmin := c.Value("current_user").(*models.User).IsAdmin
+
+	if isAdmin {
+		if err := tx.Find(&todo, c.Param("todo_id")); err != nil {
+			return models.Todo{}, errors.WithStack(err)
 		}
 	}
 
-	if filterStatus == "incompleted" {
-		for i := 0; i < len(*todo); i++ {
-			if (*todo)[i].Completed {
-				*todo = append((*todo)[:i], (*todo)[i+1:]...)
-				i--
-			}
+	if !isAdmin {
+		if err := tx.Where("user_id = ?", userID).Find(&todo, c.Param("todo_id")); err != nil {
+			return models.Todo{}, c.Error(404, errors.New(fmt.Sprintf("could not find todo with id = %v", c.Param("todo_id"))))
 		}
 	}
+
+	return todo, nil
 
 }

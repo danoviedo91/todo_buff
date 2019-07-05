@@ -182,7 +182,7 @@ a:hover {
 }
 
 .wwc-task-date-and-actions-admin {
-    width: 13.33%;
+    width: 15%;
     line-height: 33.5px;
 }
 
@@ -369,8 +369,21 @@ a:hover {
     padding: 0 20px;
 }
 
-.wwc-form-signin {
-    min-height: 605px;
+.auth-wrapper h1{margin-bottom: 20px;}
+
+.wwc-signin-wrapper {
+    width: 40% !important;
 }
 
-.auth-wrapper h1{margin-bottom: 20px;}
+.pagination .active {
+    border: none !important;
+}
+
+.page-item.active .page-link {
+    border: 1px solid #194767;
+    background-color: #194767;
+}
+
+.pagination .page-link {
+    color: #194767;
+}

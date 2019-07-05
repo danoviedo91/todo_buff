@@ -1,8 +1,10 @@
 package actions
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/render"
 	"github.com/gobuffalo/packr/v2"
 )
@@ -30,6 +32,24 @@ func init() {
 				t := time.Now().Format("Monday 2, January 2006")
 
 				return t
+
+			},
+			"hrefCancelBtn": func(c buffalo.Context) string {
+
+				filterStatus := c.Session().Get("filterStatus")
+				page := c.Session().Get("page")
+				var hrefCancelBtn string
+
+				switch filterStatus {
+				case "completed":
+					hrefCancelBtn = fmt.Sprintf("/?page=%v&status=%v", page, "completed")
+				case "incompleted":
+					hrefCancelBtn = fmt.Sprintf("/?page=%v&status=%v", page, "incompleted")
+				default:
+					hrefCancelBtn = fmt.Sprintf("/?page=%v", page)
+				}
+
+				return hrefCancelBtn
 
 			},
 		},

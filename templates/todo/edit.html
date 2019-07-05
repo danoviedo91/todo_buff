@@ -14,13 +14,7 @@
         <%= f.InputTag("ID", {id: "todo_id", name: "todo_id", type: "hidden", value: todo.ID}) %>
 
     <div class="d-flex justify-content-end">
-        <%= if (session.Get("filterStatus") == "completed") { %>
-        <a class="btn wwc-cancel-btn" href="/?status=completed">Cancel</a>
-        <% } else if (session.Get("filterStatus") == "incompleted") { %>
-        <a class="btn wwc-cancel-btn" href="/?status=incompleted">Cancel</a>
-        <% } else { %>
-        <a class="btn wwc-cancel-btn" href="/">Cancel</a>
-        <% } %>
+        <a class="btn wwc-cancel-btn" href="<%= hrefCancelBtn(context) %>">Cancel</a>
         <input name="authenticity_token" type="hidden" value="<%= authenticity_token %>">
         <button type="submit" class="btn text-white wwc-create-task-btn">Edit Task</button>
     </div>

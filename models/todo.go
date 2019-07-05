@@ -17,8 +17,8 @@ type Todo struct {
 	UserID      uuid.UUID `json:"user_id" db:"user_id"`
 	CreatedAt   time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
-	Title       string    `json:"title" db:"title"`
-	Description string    `json:"description" db:"description"`
+	Title       string    `json:"title" db:"title" fako:"title"`
+	Description string    `json:"description" db:"description" fako:"sentence"`
 	Deadline    time.Time `json:"deadline" db:"deadline"`
 	Completed   bool      `json:"completed" db:"completed"`
 

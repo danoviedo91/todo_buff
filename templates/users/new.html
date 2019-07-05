@@ -7,17 +7,10 @@
         <%= f.InputTag("FirstName") %>
         <%= f.InputTag("LastName") %>
         <%= f.InputTag("Email") %>
-        <%= f.InputTag("Password", {type: "password"}) %>
-        <%= f.InputTag("PasswordConfirmation", {type: "password", style: "margin-bottom: 30px;"}) %>
+        <%= f.CheckboxTag("IsAdmin", {label: "Is Admin"}) %>
         
         <div class="d-flex justify-content-end">
-          <%= if (session.Get("filterStatus") == "completed") { %>
-          <a class="btn wwc-cancel-btn" href="/?status=completed">Cancel</a>
-          <% } else if (session.Get("filterStatus") == "incompleted") { %>
-          <a class="btn wwc-cancel-btn" href="/?status=incompleted">Cancel</a>
-          <% } else { %>
-          <a class="btn wwc-cancel-btn" href="/">Cancel</a>
-          <% } %>
+          <a class="btn wwc-cancel-btn" href="<%= hrefCancelBtn(context) %>">Cancel</a>
           <button class="btn wwc-bg-cyan text-white">Register!</button>
         </div>
       <% } %>

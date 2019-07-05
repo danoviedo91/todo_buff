@@ -1,17 +1,12 @@
-<%= if (current_user) { %>
-
 <div class="d-flex justify-content-end wwc-mx-32">
   <div class="my-auto mr-auto wwc-ml-30">
       <span>Logged in as <%= current_user.FirstName %>&nbsp;<%= current_user.LastName %></span>
   </div>
   <%= if (isAdmin) { %>
     <a class="btn wwc-add-task-btn text-white wwc-mr-20" href="<%= newUsersPath() %>">Create User</a>
-    <a class="btn wwc-add-task-btn text-white" href="<%= newPath() %>">Add Task</a>
   <% } %>
-  <%= if (!isAdmin) { %>
+    <!-- <a class="btn wwc-add-task-btn text-white wwc-mr-20" href="<%= editUsersPath({user_id: user_id}) %>">Edit Account</a> -->
     <a class="btn wwc-add-task-btn text-white" href="<%= newPath() %>">Add Task</a>
-  <% } %>
-  
 </div>
 
 <%# --- cellWidthClass is Used for column widths in the table --- %>
@@ -24,7 +19,7 @@
 } %>
 
 <div class="wwc-tasks-container">
-  <table class="table table-borderless" id="wwc-task-table">
+  <table class="table table-borderless mb-4" id="wwc-task-table">
     <thead class="thead-dark">
       <tr>
         <th class="wwc-task-name wwc-thead-first-element">Task</th>
@@ -68,15 +63,7 @@
             </form>
           <% } %>
 
-          <%= if (session.Get("filterStatus") == "completed") { %>
-          <a href="<%= showPath({todo_id: task.ID, status: "completed" }) %>"
-            class="wwc-task-title"><%= task.Title %></a>
-          <% } else if (session.Get("filterStatus") == "incompleted") { %>
-          <a href="<%= showPath({todo_id: task.ID, status: "incompleted" }) %>"
-            class="wwc-task-title"><%= task.Title %></a>
-          <% } else { %>
           <a href="<%= showPath({todo_id: task.ID }) %>" class="wwc-task-title"><%= task.Title %></a>
-          <% } %>
 
         </td>
 
@@ -113,21 +100,11 @@
     </tbody>
     <% } %>
   </table>
+
+  <div class="d-flex justify-content-center">
+
+    <%= paginator(pagination) %>
+
+  </div>
+
 </div>
-<% } else { %>
-  <div class="wwc-form-wrapper shadow wwc-form-signin d-flex align-items-center wwc-my-0">
-    <div class="auth-wrapper w-100">
-      <div class="sign-form">
-        <h1 class="text-center wwc-fsize-main">Sign In</h1>
-  
-        <%= form_for(user, {action: "/", class: "wwc-mb-20"}) { %>
-          <%= f.InputTag("Email") %>
-          <%= f.InputTag("Password", {type: "password", style: "margin-bottom: 30px;"}) %>
-          <div class="d-flex justify-content-end align-items-center">
-            <button class="btn wwc-bg-cyan text-white">Sign In!</button>
-          </div>
-        <% } %>
-      </div>
-    </div>
-  </div>  
-<% } %>

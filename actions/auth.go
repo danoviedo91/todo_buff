@@ -44,7 +44,7 @@ func AuthCreate(c buffalo.Context) error {
 		verrs := validate.NewErrors()
 		verrs.Add("email", "invalid email/password")
 		c.Set("errors", verrs)
-		return c.Render(422, r.HTML("index.html"))
+		return c.Render(422, r.HTML("auth/new.html"))
 	}
 
 	if err != nil {
@@ -61,7 +61,7 @@ func AuthCreate(c buffalo.Context) error {
 		return bad()
 	}
 	c.Session().Set("current_user_id", u.ID)
-	c.Flash().Add("success", "Welcome Back to Buffalo!")
+	//c.Flash().Add("success", "Welcome Back to Buffalo!")
 
 	redirectURL := "/"
 	if redir, ok := c.Session().Get("redirectURL").(string); ok {

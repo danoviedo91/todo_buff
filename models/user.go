@@ -2,11 +2,9 @@ package models
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 	"time"
 
-	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/pop"
 	"github.com/gobuffalo/uuid"
 	"github.com/gobuffalo/validate"
@@ -104,56 +102,4 @@ func (u *User) ValidateCreate(tx *pop.Connection) (*validate.Errors, error) {
 // This method is not required and may be deleted.
 func (u *User) ValidateUpdate(tx *pop.Connection) (*validate.Errors, error) {
 	return validate.NewErrors(), nil
-}
-
-// GetTodoes ...
-func (u User) GetTodoes(tx *pop.Connection, c buffalo.Context) ([]Todo, error) {
-
-	todo := []Todo{}
-	userID := c.Value("current_user").(*User).ID
-	isAdmin := c.Value("current_user").(*User).IsAdmin
-
-	if isAdmin {
-
-		if err := tx.All(&todo); err != nil {
-			return nil, errors.WithStack(err)
-		}
-
-	}
-
-	if !isAdmin {
-
-		if err := tx.Eager().Find(&u, userID); err != nil {
-			return nil, errors.WithStack(err)
-		}
-
-		todo = u.Todoes
-
-	}
-
-	return todo, nil
-
-}
-
-// GetTodo ...
-func (u User) GetTodo(tx *pop.Connection, c buffalo.Context) (Todo, error) {
-
-	todo := Todo{}
-	userID := c.Value("current_user").(*User).ID
-	isAdmin := c.Value("current_user").(*User).IsAdmin
-
-	if isAdmin {
-		if err := tx.Find(&todo, c.Param("todo_id")); err != nil {
-			return Todo{}, errors.WithStack(err)
-		}
-	}
-
-	if !isAdmin {
-		if err := tx.Where("user_id = ?", userID).Find(&todo, c.Param("todo_id")); err != nil {
-			return Todo{}, c.Error(404, errors.New(fmt.Sprintf("could not find todo with id = %v", c.Param("todo_id"))))
-		}
-	}
-
-	return todo, nil
-
 }

@@ -1,32 +1,15 @@
-<style>
-  .auth-wrapper{
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .auth-wrapper .sign-form{
-    max-width: 350px;
-    width: 100%;
-    padding: 0 20px;
-  }
-
-  .auth-wrapper h1{margin-bottom: 20px;}
-</style>
-<div class="wwc-form-wrapper shadow">
-  <div class="auth-wrapper">
+<div class="wwc-form-wrapper shadow wwc-form-signin d-flex align-items-center wwc-my-0 wwc-signin-wrapper">
+  <div class="auth-wrapper w-100">
     <div class="sign-form">
       <h1 class="text-center wwc-fsize-main">Sign In</h1>
 
-      <%= form_for(user, {action: signinPath()}) { %>
+      <%= form_for(user, {action: "/signin", method: "POST"}) { %>
         <%= f.InputTag("Email") %>
         <%= f.InputTag("Password", {type: "password", style: "margin-bottom: 30px;"}) %>
-        <div class="d-flex justify-content-end">
-          <a class="btn wwc-cancel-btn" href="/">Cancel</a>
+        <div class="d-flex justify-content-end align-items-center">
           <button class="btn wwc-bg-cyan text-white">Sign In!</button>
         </div>
       <% } %>
     </div>
   </div>
-</div>
+</div>  
